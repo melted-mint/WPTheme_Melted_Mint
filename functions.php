@@ -57,6 +57,34 @@ function custom_blog_category_template($template) {
 add_filter('category_template', 'custom_blog_category_template');
 ?>
 
+<!-- novels (Edit Nedded) -->
+<?php
+function custom_novel_category_template($template) {
+    if (is_category('novel')) { // Blog 카테고리 ID 확인
+        $custom_template = locate_template('page-blog.php'); // page-blog.php 불러오기
+        if ($custom_template) {
+            return $custom_template;
+        }
+    }
+    return $template; // 기본 템플릿 유지
+}
+add_filter('category_template', 'custom_novel_category_template');
+?>
+
+<!-- about -->
+<?php
+function custom_about_category_template($template) {
+    if (is_category('about')) { // Blog 카테고리 ID 확인
+        $custom_template = locate_template('page-about.php'); // page-blog.php 불러오기
+        if ($custom_template) {
+            return $custom_template;
+        }
+    }
+    return $template; // 기본 템플릿 유지
+}
+add_filter('category_template', 'custom_about_category_template');
+?>
+
 <!-- sidebar -->
 <?php
 function custom_sidebars() {

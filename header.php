@@ -187,7 +187,7 @@
                     </div>
                 </label>
 
-                <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-auto p-2 shadows text-center">
+                <ul tabindex="0" class="menu menu-sm dropdown-content rounded-box z-[1] mt-3 w-auto p-2 shadows text-center">
                     <?php if ($is_logged_in): ?>
                         <!-- 로그인한 경우 -->
                         <li class="text-lg my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
