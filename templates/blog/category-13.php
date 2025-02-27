@@ -23,9 +23,9 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
         }
 
         // 버튼 스타일 (Tailwind + DaisyUI 예시)
-        $btn_base_class     = "btn btn-square availableButton w-11 h-11 text-3xl text-neutral-content border-none buttonComponent flex items-center justify-center";
-        $btn_active_class   = "btn btn-square activatedButton w-11 h-11 text-3xl text-primary-content border-none flex items-center justify-center buttonComponent";
-        $btn_disabled_class = "btn btn-square btn-disabled disabledButton w-11 h-11 text-3xl text-neutral-content border-none opacity-50 cursor-not-allowed flex items-center justify-center";
+        $btn_base_class     = "btn btn-square availableButton w-8 h-8 sm:w-9.5 sm:h-9.5 md:w-11 md:h-11 text-xl sm:text-2xl md:text-3xl text-neutral-content border-none buttonComponent flex items-center justify-center";
+        $btn_active_class   = "btn btn-square activatedButton w-8 h-8 sm:w-9.5 sm:h-9.5 md:w-11 md:h-11 text-xl sm:text-2xl md:text-3xl text-primary-content border-none flex items-center justify-center buttonComponent";
+        $btn_disabled_class = "btn btn-square btn-disabled disabledButton w-8 h-8 sm:w-9.5 sm:h-9.5 text-xl md:w-11 md:h-11 md:text-3xl text-neutral-content border-none opacity-50 cursor-not-allowed flex items-center justify-center";
 
         // 페이지네이션 컨테이너 (화살표 + 페이지 번호)
         echo '<div class="flex items-center justify-center my-4">';
@@ -129,9 +129,9 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
         // - 예쁜(permalink) 구조를 쓰신다면 별도 처리 필요
         echo '<div class="flex items-center justify-center my-4">';
         echo '<form action="" method="GET" class="flex items-center gap-2">';
-        echo '<label for="paged" class="whitespace-nowrap">Go to >> </label>';
-        echo '<input type="number" name="paged" min="1" max="' . $total_pages . '" value="' . $paged . '" class="input cardComponent w-20 text-center" />';
-        echo '<button type="submit" class="btn btn-ghost cardComponent">Go</button>';
+        echo '<label for="paged" class="whitespace-nowrap text-sm sm:text-lg md:text-xl">Go to page >> </label>';
+        echo '<input type="number" name="paged" min="1" max="' . $total_pages . '" value="' . $paged . '" class="input h-8 sm:h-10 cardComponent w-14 sm:w-17 md:w-20 text-center" />';
+        echo '<button type="submit" class="btn btn-ghost btn-sm sm:btn-md cardComponent">Go</button>';
         echo '</form>';
         echo '</div>';
     }

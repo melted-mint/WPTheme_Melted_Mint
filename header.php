@@ -31,8 +31,8 @@
         <div class="flex flex-row -mb-2">
             <!-- 왼쪽: 홈(사이트 제목) -->
             <div class="navbar-start sm:w-fit specialButton">
-                <a href="<?php echo home_url('/home'); ?>" class="btn btn-ghost rounded-lg text-lg">
-                    <svg class="-ml-3 w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
+                <a href="<?php echo home_url('/home'); ?>" class="btn btn-ghost rounded-lg text:md sm:text-lg">
+                    <svg class="-ml-3 w-5 h-5 xs:w-7 xs:h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
                     <path stroke-width="2" d="M12.3911 4.26185C11.986 3.84943 11.3167 3.86534 10.9317 4.29654L4.75406 11.2155C4.59044 11.3987 4.5 11.6358 4.5 11.8815V19.5C4.5 20.0523 4.94772 20.5 5.5 20.5H8.5C9.05228 20.5 9.5 20.0523 9.5 19.5V16C9.5 15.4477 9.94772 15 10.5 15H13.5C14.0523 15 14.5 15.4477 14.5 16V19.5C14.5 20.0523 14.9477 20.5 15.5 20.5H18.5C19.0523 20.5 19.5 20.0523 19.5 19.5V11.909C19.5 11.6469 19.3971 11.3953 19.2134 11.2083L12.3911 4.26185Z"/>
                     </svg>
                     <div class="-mr-2">
@@ -41,7 +41,7 @@
                 </a>
             </div>
 
-            <!-- 중앙: 검색창 (md 이상에서만 보이도록) -->
+            <!-- 중앙: 검색창 (sm 이상에서만 보이도록) -->
             <div class="navbar-center hidden sm:flex flex-1 px-2 mr-4">
             <form 
                 role="search" 
@@ -60,15 +60,15 @@
             </div>
 
             <!-- 오른쪽: 버튼/아이콘들 (gap-1 = 약 4px 간격) -->
-            <div class="navbar-end flex items-center gap-1 md:gap-3 sm:w-fit">
+            <div class="navbar-end flex items-center gap-1 sm:gap-2 md:gap-3 sm:w-fit">
 
             <!-- 돋보기 아이콘 (md 미만에서만 보여서 검색창 드롭다운) -->
             <div class="dropdown dropdown-end sm:hidden">
-                <label tabindex="0" class="btn btn-ghost btn-circle">
+                <label tabindex="0" class="btn btn-sm xs:btn-md btn-ghost btn-circle">
                 <!-- magnifying glass icon -->
                 <svg 
                     xmlns="http://www.w3.org/2000/svg" 
-                    class="h-7 w-7" 
+                    class="h-5 w-5" 
                     fill="none" 
                     viewBox="0 0 24 24" 
                     stroke="currentColor"
@@ -84,7 +84,7 @@
                 <!-- 드롭다운으로 검색창 표시 -->
                 <ul 
                 tabindex="0" 
-                class="dropdown-content cardComponent rounded-xl mt-4 p-2 shadow md:z-0 w-screen -m-48"
+                class="dropdown-content cardComponent rounded-xl mt-4 p-2 shadow md:z-0 w-screen -m-40"
                 >
                 <li>
                     <form 
@@ -105,9 +105,9 @@
                 </ul>
             </div>
             <div class="dropdown dropdown-center">
-                <label tabindex="0" class="btn btn-ghost btn-circle fill-current sm:-ml-3">
+                <label tabindex="0" class="btn btn-ghost btn-sm sm:btn-md btn-circle fill-current sm:-ml-3">
                     <svg
-                        class="w-7 h-7 md:w-10 md:h-10"
+                        class="w-5 h-5 sm:w-7 sm:h-7 md:w-10 md:h-10"
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 -960 960 960">
                         <path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80Zm0-400Zm-220 40q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm120-160q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm200 0q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm120 160q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17ZM480-160q9 0 14.5-5t5.5-13q0-14-15-33t-15-57q0-42 29-67t71-25h70q66 0 113-38.5T800-518q0-121-92.5-201.5T488-800q-136 0-232 93t-96 227q0 133 93.5 226.5T480-160Z"/>
@@ -144,13 +144,13 @@
                 </div>
             </div>
             <!-- 다크/라이트 모드 토글 -->
-            <label class="swap swap-rotate btn btn-ghost btn-circle">
+            <label class="swap swap-rotate btn-sm sm:btn-md btn btn-ghost btn-circle">
                 <!-- this hidden checkbox controls the state -->
                 <input type="checkbox" id="themeToggle"/>
 
                 <!-- sun icon -->
                 <svg
-                    class="swap-on h-7 w-7 md:h-10 md:w-10 fill-current"
+                    class="swap-on h-5 w-5 sm:h-7 sm:w-7 md:h-10 md:w-10 fill-current"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24">
                     <path
@@ -159,7 +159,7 @@
 
                 <!-- moon icon -->
                 <svg
-                    class="swap-off h-7 w-7 md:h-10 md:w-10 fill-current"
+                    class="swap-off h-5 w-5 sm:h-7 sm:w-7 md:h-10 md:w-10 fill-current"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24">
                     <path
@@ -175,8 +175,8 @@
 
             <!-- 아바타 드롭다운 -->
             <div class="dropdown dropdown-end">
-                <label tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-                    <div class="w-7 md:w-10 rounded-full">
+                <label tabindex="0" role="button" class="btn btn-sm sm:btn-md btn-ghost btn-circle avatar">
+                    <div class="w-6 sm:w-7 md:w-10 rounded-full">
                         <?php if ($is_logged_in): ?>
                             <!-- 로그인한 경우: 사용자 아바타 표시 -->
                             <?php echo get_avatar($current_user->ID, 40); ?>
@@ -187,7 +187,7 @@
                     </div>
                 </label>
 
-                <ul tabindex="0" class="menu menu-sm dropdown-content rounded-box z-[1] mt-3 w-auto p-2 shadows text-center">
+                <ul tabindex="0" class="menu menu-sm dropdown-content rounded-box z-[1] mt-4 w-auto p-2 shadows text-center">
                     <?php if ($is_logged_in): ?>
                         <!-- 로그인한 경우 -->
                         <li class="text-lg my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
@@ -205,16 +205,16 @@
 
             <div class="dropdown dropdown-end pr-2">
                 <!-- 햄버거 아이콘 (메뉴 토글) -->
-                <label tabindex="0" role="button" class="btn btn-ghost btn-circle rounded-sm md:hidden">
+                <label tabindex="0" role="button" class="btn btn-ghost btn-sm xs:btn-md btn-circle rounded-sm md:hidden">
                     <!-- hamburger icon -->
                     <svg
-                    class="fill-current w-7 h-7"
+                    class="fill-current w-5 h-5 xs:w-7 xs:h-7"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 512 512">
                     <path d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z" />
                     </svg>
                 </label>
-                <ul class="menu menu-compact dropdown-content mt-3 p-2 shadow rounded-box w-32">
+                <ul class="menu menu-compact dropdown-content mt-4 p-2 shadow rounded-box w-32">
                     <?php
                         wp_nav_menu(array(
                             'theme_location' => 'primary',
