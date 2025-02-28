@@ -138,94 +138,51 @@ add_filter('nav_menu_link_attributes', 'add_menu_link_attributes', 10, 4);
 <!-- Ajax Form -->
 <?php
 /**
- * AJAX 콜백: 프론트엔드 글쓰기
+ * SunEditor 이미지 업로드 처리
  */
-function my_ajax_submit_post_form() {
-    // 1) 로그인 여부 확인 (비로그인 시 중단)
+function melted_mint_suneditor_image_upload() {
+    // 1) 로그인·권한 체크 (예: Editor 이상만 가능)
     if ( ! is_user_logged_in() ) {
-        wp_send_json_error(array(
-            'message' => '로그인이 필요합니다.'
-        ));
+        // JSON 형태로 에러 반환
+        wp_send_json_error( array( 'message' => '로그인이 필요합니다.' ) );
     }
 
-    // 2) 권한 체크 (예: Editor 또는 Admin만 글 작성 가능)
-    if ( ! current_user_can('editor') && ! current_user_can('administrator') ) {
-        wp_send_json_error(array(
-            'message' => '글 작성 권한이 없습니다.'
-        ));
+    // 2) 실제 업로드할 파일이 있는지 확인
+    if ( empty( $_FILES['file'] ) ) {
+        wp_send_json_error( array( 'message' => '업로드할 파일이 없습니다.' ) );
     }
 
-    // 3) 입력값 받기
-    // (주의: sanitize 필요. 여기서는 예시로만 작성)
-    $post_section  = isset($_POST['post_section']) ? sanitize_text_field($_POST['post_section']) : '';
-    $post_title    = isset($_POST['post_title'])   ? sanitize_text_field($_POST['post_title'])   : '';
-    $post_content  = isset($_POST['post_content']) ? wp_kses_post($_POST['post_content'])         : '';
-    $post_tags     = isset($_POST['post_tags'])    ? sanitize_text_field($_POST['post_tags'])     : '';
-    $tags_array    = explode(',', $post_tags);
-
-    // 필요하다면 게시판별 권한 체크 로직 추가 가능
-    // 예: if ($post_section === 'blog' && ! current_user_can('administrator')) { ... }
-
-    // 4) 카테고리 (체크박스 등으로 받았다면)
-    $post_category = array();
-    if ( isset($_POST['post_category']) && is_array($_POST['post_category']) ) {
-        $post_category = array_map('intval', $_POST['post_category']);
+    // 3) 워드프레스 업로드 처리
+    //   (test_form=false 로 설정하면, $_POST 검증을 건너뜀)
+    $upload = wp_handle_upload( $_FILES['file'], array( 'test_form' => false ) );
+    if ( isset( $upload['error'] ) ) {
+        // 업로드 실패
+        wp_send_json_error( array( 'message' => $upload['error'] ) );
     }
 
-    // 5) 새 글 정보
-    $new_post = array(
-        'post_title'    => $post_title,
-        'post_content'  => $post_content,
-        'post_status'   => 'publish', // 바로 게시
-        'post_author'   => get_current_user_id(),
-        'post_category' => $post_category,
-        'tags_input'    => $tags_array,
+    // 4) 업로드 성공 -> SunEditor가 요구하는 형식으로 응답
+    // SunEditor 문서(File Upload) 기준, 예:
+    // {
+    //   "errorMessage": "",
+    //   "result": [ { "url": "업로드된파일URL" } ]
+    // }
+    $uploaded_url = $upload['url'];
+
+    // SunEditor에 반환할 데이터
+    $response = array(
+        'errorMessage' => '',
+        'result'       => array(
+            array( 'url' => $uploaded_url )
+        )
     );
 
-    // 6) 글 작성
-    $post_id = wp_insert_post($new_post);
-
-    if ( is_wp_error($post_id) || ! $post_id ) {
-        wp_send_json_error(array(
-            'message' => '글 작성 실패'
-        ));
-    }
-
-    // 7) 파일 업로드 (이미지, 오디오 등)
-    // 폼에서 <input type="file" name="featured_image">, <input type="file" name="audio_file"> 등을 받는 경우
-    require_once( ABSPATH . 'wp-admin/includes/file.php' );
-    require_once( ABSPATH . 'wp-admin/includes/media.php' );
-    require_once( ABSPATH . 'wp-admin/includes/image.php' );
-
-    // 대표 이미지(Featured Image) 업로드 예시
-    if ( isset($_FILES['featured_image']) && !empty($_FILES['featured_image']['name']) ) {
-        $attach_id = media_handle_upload('featured_image', $post_id);
-        if ( ! is_wp_error($attach_id) ) {
-            // 대표이미지 설정
-            set_post_thumbnail($post_id, $attach_id);
-        }
-    }
-
-    // 오디오 파일 업로드 예시
-    if ( isset($_FILES['audio_file']) && !empty($_FILES['audio_file']['name']) ) {
-        $audio_id = media_handle_upload('audio_file', $post_id);
-        if ( ! is_wp_error($audio_id) ) {
-            // 글 메타 등에 저장하거나, 본문에 삽입할 수 있음
-            update_post_meta($post_id, '_attached_audio', $audio_id);
-        }
-    }
-
-    // 8) 성공 응답
-    wp_send_json_success(array(
-        'message'   => '글이 성공적으로 작성되었습니다.',
-        'post_id'   => $post_id,
-        'redirect'  => home_url("/{$post_section}/?success=1")
-    ));
+    // 5) JSON 성공 응답
+    wp_send_json_success( $response );
 }
 
-// AJAX 액션 등록
-add_action('wp_ajax_submit_post_form', 'my_ajax_submit_post_form');
-add_action('wp_ajax_nopriv_submit_post_form', 'my_ajax_submit_post_form');
+// AJAX 액션 등록 (로그인 사용자 + 비로그인 사용자 둘 다 허용 시 nopriv도 추가)
+add_action( 'wp_ajax_my_suneditor_image_upload', 'melted_mint_suneditor_image_upload' );
+add_action( 'wp_ajax_nopriv_my_suneditor_image_upload', 'melted_mint_suneditor_image_upload' );
 ?>
 <!-- media add button -->
 <?php
@@ -239,4 +196,13 @@ function melted_mint_enqueue_frontend_editor_scripts() {
     }
 }
 add_action('wp_enqueue_scripts', 'melted_mint_enqueue_frontend_editor_scripts');
+?>
+
+<!-- media... -->
+<?php
+function allow_custom_file_types($mime_types) {
+    $mime_types['png'] = 'image/png'; // Example for SVG files
+    return $mime_types;
+}
+add_filter('upload_mimes', 'allow_custom_file_types');
 ?>

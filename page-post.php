@@ -1,19 +1,16 @@
 <?php
-/*
-Template Name: Post
-*/
-
 /**
- * 1) 로그인/권한 체크 + 글쓰기 로직(리다이렉트 등)은
- *    get_header() 호출 "이전"에 처리해야 합니다.
+ * Template Name: Post
  */
 
-// 현재 사용자 정보
+// ------------------------------
+// (1) 로그인/권한 체크 + 글쓰기 로직
+// ------------------------------
 $current_user = wp_get_current_user();
-$is_admin  = current_user_can('administrator'); // Admin 권한 확인
-$is_editor = current_user_can('editor');        // Editor 권한 확인
+$is_admin  = current_user_can('administrator');
+$is_editor = current_user_can('editor');
 
-// 로그인되지 않은 사용자는 로그인 페이지로 리디렉트
+// 로그인 안 됐다면 로그인 페이지로 이동
 if ( ! is_user_logged_in() ) {
     wp_redirect( wp_login_url( home_url('/') ) );
     exit;
@@ -21,23 +18,25 @@ if ( ! is_user_logged_in() ) {
 
 // 게시판별 글쓰기 권한
 $allowed_categories = array(
-    'blog'      => $is_admin,               // Blog (Admin만)
-    'novel'     => $is_admin,               // Novel (Admin만)
-    'spinoff'   => $is_editor || $is_admin, // Spinoff (Editor, Admin)
-    'community' => true                     // Community (누구나)
+    'blog'      => $is_admin,               // Admin만
+    'novel'     => $is_admin,               // Admin만
+    'spinoff'   => $is_editor || $is_admin, // Editor, Admin
+    'community' => true                     // 누구나
 );
 
-// 폼 제출 시 글 저장 처리
+// 폼 제출 시(POST) 글 작성 처리
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_post']) ) {
     $post_section = sanitize_text_field( $_POST['post_section'] );
-
-    // 권한 확인
     if ( ! isset($allowed_categories[$post_section]) || ! $allowed_categories[$post_section] ) {
         wp_die('🚫 해당 게시판에 글을 작성할 권한이 없습니다.');
     }
 
+    // 제목
     $post_title   = sanitize_text_field( $_POST['post_title'] );
+    // 내용(Quill에서 넘어온 HTML)
     $post_content = wp_kses_post( $_POST['post_content'] );
+
+    // 카테고리, 태그
     $post_category = isset($_POST['post_category']) ? array_map('intval', $_POST['post_category']) : array();
     $post_tags    = isset($_POST['post_tags']) ? sanitize_text_field($_POST['post_tags']) : '';
 
@@ -45,7 +44,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_post']) ) {
     $new_post = array(
         'post_title'    => $post_title,
         'post_content'  => $post_content,
-        'post_status'   => 'publish', // 검토 후 게시
+        'post_status'   => 'publish', // 바로 게시
         'post_author'   => get_current_user_id(),
         'post_category' => $post_category,
         'tags_input'    => explode(',', $post_tags),
@@ -53,19 +52,17 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_post']) ) {
 
     // 글 작성
     $post_id = wp_insert_post( $new_post );
-
-    // 작성 성공 시 해당 게시판 페이지로 이동
     if ( $post_id ) {
+        // 작성 성공 시 이동
         $redirect_url = home_url( "/{$post_section}/?success=1" );
         wp_redirect( $redirect_url );
         exit;
     }
 }
 
-// -----------------------------------------------------------------
-// 여기까지가 "화면 출력 전" 처리(리다이렉트/권한/저장 로직)
-
-// 게시판별 카테고리 목록
+// ------------------------------
+// (2) 카테고리 목록
+// ------------------------------
 $category_options = array(
     'blog'      => get_categories( array('include' => array(8, 9, 10, 11, 12), 'hide_empty' => false) ),
     'novel'     => get_categories( array('include' => array(17, 18),         'hide_empty' => false) ),
@@ -73,31 +70,20 @@ $category_options = array(
     'community' => get_categories( array('include' => array(22),             'hide_empty' => false) )
 );
 
-// 에디터 설정 (Classic Editor + Advanced Editor Tools 플러그인 필요)
-$editor_settings = array(
-    'textarea_name' => 'post_content',
-    'media_buttons' => true,  // "미디어 추가" 버튼
-    'teeny'         => false, // 전체 기능
-    'tinymce'       => array(
-        'height'  => 300,
-        // 필요한 TinyMCE 플러그인 (표, 폰트 크기, 색상 등)
-        'plugins' => 'lists,link,image,code,table,advlist,fullscreen,charmap,hr',
-        // 툴바 설정 (예시)
-        'toolbar1' => 'formatselect,fontselect,fontsizeselect,bold,italic,underline,'.
-                      'alignleft,aligncenter,alignright,bullist,numlist,link,image,table,code,undo,redo',
-    ),
-    'quicktags' => true, // HTML 모드
-);
-
-// 이제 헤더(HTML) 출력 시작
+// ------------------------------
+// (3) 헤더 출력
+// ------------------------------
 get_header();
 ?>
 
+<!-- Quill CSS -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+
 <div class="max-w-3xl mx-auto p-6 bg-base-100 shadow-lg rounded-lg">
-    <h2 class="text-2xl font-bold mb-4">📝 새 글 작성</h2>
+    <h2 class="text-2xl font-bold mb-4">📝 새 글 작성 (Quill)</h2>
 
     <form method="post">
-        <!-- 어디에 게시할지 선택 -->
+        <!-- 게시판 선택 -->
         <label class="block mb-2 text-lg font-semibold">게시할 곳 선택</label>
         <select name="post_section" id="post_section" class="w-full p-2 border rounded-md" required>
             <option value="">-- 선택 --</option>
@@ -110,26 +96,28 @@ get_header();
             <?php endforeach; ?>
         </select>
 
-        <!-- 카테고리 선택 (동적으로 변경) -->
+        <!-- 카테고리 선택(동적으로 변경) -->
         <div id="category_section" class="hidden mt-4">
             <label class="block mb-2 text-lg font-semibold">카테고리 선택</label>
             <div id="category_options" class="flex flex-wrap gap-2"></div>
         </div>
 
+        <!-- 제목 -->
         <label class="block mt-4 mb-2 text-lg font-semibold">제목</label>
         <input type="text" name="post_title" class="w-full p-2 border rounded-md" required>
 
-        <!-- 내용 (wp_editor) -->
+        <!-- 내용(Quill) -->
         <label class="block mt-4 mb-2 text-lg font-semibold">내용</label>
-        <?php
-        // 기존 textarea 대신 wp_editor 사용
-        wp_editor( '', 'post_content_editor_id', $editor_settings );
-        ?>
+        <!-- Quill 에디터 영역 -->
+        <div id="quill-editor" style="height: 300px;"></div>
+        <!-- 실제 폼 전송용 hidden input -->
+        <input type="hidden" name="post_content" id="post_content_input" />
 
-        <!-- 태그 입력 -->
+        <!-- 태그 -->
         <label class="block mt-4 mb-2 text-lg font-semibold">태그</label>
         <div id="tag-container" class="flex flex-wrap gap-2"></div>
-        <input type="text" id="tag-input" class="w-full p-2 border rounded-md" placeholder="태그 입력 후 Enter" autocomplete="off">
+        <input type="text" id="tag-input" class="w-full p-2 border rounded-md" 
+               placeholder="태그 입력 후 Enter" autocomplete="off">
         <input type="hidden" name="post_tags" id="post_tags">
 
         <button type="submit" name="submit_post" class="mt-6 w-full p-3 bg-primary text-white rounded-md">
@@ -139,6 +127,9 @@ get_header();
 </div>
 
 <script>
+// ------------------------------
+// 카테고리 선택
+// ------------------------------
 document.getElementById('post_section').addEventListener('change', function () {
     let section = this.value;
     let categories = {
@@ -155,7 +146,10 @@ document.getElementById('post_section').addEventListener('change', function () {
         document.getElementById('category_section').classList.remove('hidden');
         categories[section].forEach(cat => {
             let label = document.createElement('label');
-            label.innerHTML = `<input type="checkbox" name="post_category[]" value="${cat.term_id}" class="form-checkbox"> ${cat.name}`;
+            label.innerHTML = `
+                <input type="checkbox" name="post_category[]" 
+                       value="${cat.term_id}" class="form-checkbox"> ${cat.name}
+            `;
             categoryOptions.appendChild(label);
         });
     } else {
@@ -163,7 +157,9 @@ document.getElementById('post_section').addEventListener('change', function () {
     }
 });
 
-// 태그 추가 기능
+// ------------------------------
+// 태그 입력
+// ------------------------------
 let tagContainer = document.getElementById('tag-container');
 let tagInput = document.getElementById('tag-input');
 let hiddenTags = document.getElementById('post_tags');
@@ -183,6 +179,42 @@ tagInput.addEventListener('keypress', function (e) {
         }
         tagInput.value = '';
     }
+});
+</script>
+
+<!-- Quill JS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
+<script>
+// ------------------------------
+// Quill 초기화
+// ------------------------------
+document.addEventListener('DOMContentLoaded', function() {
+  // 툴바 옵션 예시
+  var toolbarOptions = [
+    ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+    ['link', 'image', 'video'],                       // 링크, 이미지, 비디오
+    [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'align': [] }],
+    ['clean']                                         // remove formatting
+  ];
+
+  // Quill 에디터 생성
+  var quill = new Quill('#quill-editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: toolbarOptions
+      // 이미지 업로드 등 고급 기능은 별도 플러그인 필요
+    }
+  });
+
+  // 폼 전송 시, quill 내용을 hidden input에 넣음
+  var form = document.querySelector('form');
+  form.addEventListener('submit', function(e) {
+    var html = quill.root.innerHTML;
+    document.getElementById('post_content_input').value = html;
+  });
 });
 </script>
 

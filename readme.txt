@@ -1,8 +1,8 @@
 === Melted_Mint ===
 Contributors: Melted_Mint
 Requires at least: 6.2
-Requires PHP: 5.7
-Tested up to: 6.5
+Requires PHP: 8.3
+Tested up to: 6.7.2
 License: MIT
 License URI: https://mit-license.org/
 

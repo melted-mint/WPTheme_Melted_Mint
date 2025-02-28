@@ -27,7 +27,7 @@ $blog_categories = get_categories(array(
                         <span class="mt-1 text-sm"><?php echo esc_html($category->name); ?></span>
 
                         <!-- 오른쪽: 게시물 개수 -->
-                        <span class="mt-1.5 btn btn-ghost btn-disabled counterButton rounded-xl h-7 mr-4">
+                        <span class="mt-1.5 btn btn-ghost btn-disabled counterButton rounded-lg px-2 h-7 mr-4">
                             <?php echo esc_html($category->count); ?>
                         </span>
                     </a>

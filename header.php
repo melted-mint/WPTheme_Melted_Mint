@@ -198,6 +198,7 @@
                         <li class="my-0.5"><a class="hoveronlyButton text-md" href="<?php echo esc_url(wp_logout_url(home_url())); ?>">로그아웃</a></li>
                     <?php else: ?>
                         <!-- 로그인하지 않은 경우 -->
+                        <li class="text-lg my-0.5 mx-2">Anonymous</li>
                         <li class="my-0.5"><a class="hoveronlyButton text-md" href="<?php echo esc_url(wp_login_url()); ?>">로그인</a></li>
                     <?php endif; ?>
                 </ul>
