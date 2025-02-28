@@ -142,7 +142,7 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
 // ------------------------------
 $paged = max(1, get_query_var('paged'));
 query_posts(array(
-    'cat'            => 13,      // 카테고리 ID
+    'cat'            => 'blog',      // 카테고리 ID
     'posts_per_page' => 10,      // 한 페이지에 10개
     'orderby'        => 'date',  // 날짜 기준
     'order'          => 'DESC',  // 최신글 순
@@ -151,27 +151,22 @@ query_posts(array(
 ?>
 
 <!-- 레이아웃 시작 -->
-<div class="grid grid-cols-1 lg:grid-cols-[17.5rem_1fr] gap-4 py-4 max-w-[80rem] mx-auto sm:px-4">
+<div class="grid grid-cols-1 lg:grid-cols-[17.5rem_1fr] gap-4 py-4 max-w-[80rem] mx-auto sm:px-4 items-start">
     <!-- 사이드바 -->
-    <aside class="lg:w-70 order-last lg:order-none lg:sticky top-0">
+    <aside class="order-last lg:order-none lg:sticky lg:top-12 self-start">
         <div class="flex flex-col">
             <div class="flex cardComponent rounded-xl px-2 py-2 mb-4">
-                <!-- 원하는 사이드바 내용(카테고리) -->
                 <?php get_template_part('templates/blog/sidebar-left-category'); ?>
             </div>
             <div class="flex cardComponent rounded-xl px-2 py-2">
-                <!-- 원하는 사이드바 내용(태그) -->
                 <?php get_template_part('templates/blog/sidebar-left-tag'); ?>
             </div>
         </div>
     </aside>
 
-    <!-- 메인 콘텐츠 영역 -->
+    <!-- 메인 -->
     <main class="order-first lg:order-none rounded-xl">
-        <!-- 루프(글 목록) -->
         <?php get_template_part('templates/blog/loop'); ?>
-
-        <!-- 페이지네이션 -->
         <?php custom_two_skip_pagination(); ?>
     </main>
 </div>

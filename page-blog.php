@@ -2,7 +2,7 @@
 
 <?php 
 // templates/blog/category-13.php 파일을 불러오기
-get_template_part('templates/blog/category-13'); 
+get_template_part('templates/blog/category-blog'); 
 ?>
 
 <?php

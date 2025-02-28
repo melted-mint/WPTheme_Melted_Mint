@@ -1,10 +1,9 @@
 <?php
-// Blog 카테고리 ID
-$blog_parent_id = 13;
+$blog_cat = get_category_by_slug('blog');
+$blog_cat_id = $blog_cat ? $blog_cat->term_id : 0;
 
-// Blog 하위 카테고리 목록 가져오기
 $blog_categories = get_categories(array(
-    'child_of'   => $blog_parent_id,
+    'child_of'   => $blog_cat_id,
     'hide_empty' => true,
     'orderby'    => 'name',
     'order'      => 'ASC'

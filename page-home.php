@@ -43,7 +43,7 @@ get_header();
                 $wp_query = $temp_wp_query;
                 wp_reset_postdata();
             else :
-                echo '<p>No Blog Posts T . T</p>';
+                echo '<p class="sm:mx-4 lg:mx-0 cardComponent text-center text-xl sm:text-2xl font-bold flex items-center justify-center h-14 sm:h-18 rounded-lg">No Blog Posts T . T</p>';
             endif;
             ?>
         </div>
@@ -79,7 +79,7 @@ get_header();
                 $wp_query = $temp_wp_query;
                 wp_reset_postdata();
             else :
-                echo '<p class="cardComponent text-center text-xl sm:text-2xl font-bold flex items-center justify-center h-14 sm:h-18 rounded-lg">No Community Posts T . T</p>';
+                echo '<p class="sm:mx-4 lg:mx-0 cardComponent text-center text-xl sm:text-2xl font-bold flex items-center justify-center h-14 sm:h-18 rounded-lg">No Community Posts T . T</p>';
             endif;
             ?>
         </div>

@@ -26,13 +26,13 @@
 <body <?php body_class(); ?>>
 <header class="sm:px-4">
   <!-- 상단 네비게이션 바 -->
-  <div class="navbar cardComponent max-w-[74rem] mx-auto rounded-b-2xl px-2 h-34 -mt-20 md:-mt-11">
+  <div class="navbar cardComponent max-w-[74rem] mx-auto rounded-b-2xl px-2 h-34 -mt-21 md:-mt-11">
     <div class="flex flex-col min-w-full -mb-18 md:-mb-13">
         <div class="flex flex-row -mb-2">
             <!-- 왼쪽: 홈(사이트 제목) -->
             <div class="navbar-start sm:w-fit specialButton">
-                <a href="<?php echo home_url('/home'); ?>" class="btn btn-ghost rounded-lg text:md sm:text-lg">
-                    <svg class="-ml-3 w-5 h-5 xs:w-7 xs:h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
+                <a href="<?php echo home_url('/home'); ?>" class="btn btn-ghost rounded-lg text:md sm:text-lg lg:text-2xl">
+                    <svg class="-ml-3 w-5 h-5 sm:w-7 sm:h-7 lg:w-9 lg:h-9" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
                     <path stroke-width="2" d="M12.3911 4.26185C11.986 3.84943 11.3167 3.86534 10.9317 4.29654L4.75406 11.2155C4.59044 11.3987 4.5 11.6358 4.5 11.8815V19.5C4.5 20.0523 4.94772 20.5 5.5 20.5H8.5C9.05228 20.5 9.5 20.0523 9.5 19.5V16C9.5 15.4477 9.94772 15 10.5 15H13.5C14.0523 15 14.5 15.4477 14.5 16V19.5C14.5 20.0523 14.9477 20.5 15.5 20.5H18.5C19.0523 20.5 19.5 20.0523 19.5 19.5V11.909C19.5 11.6469 19.3971 11.3953 19.2134 11.2083L12.3911 4.26185Z"/>
                     </svg>
                     <div class="-mr-2">
@@ -190,16 +190,16 @@
                 <ul tabindex="0" class="menu menu-sm dropdown-content rounded-box z-[1] mt-4 w-auto p-2 shadows text-center">
                     <?php if ($is_logged_in): ?>
                         <!-- 로그인한 경우 -->
-                        <li class="text-lg my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
-                        <li class="my-0.5"><a class="hoveronlyButton text-md" href="<?php echo esc_url(admin_url('profile.php')); ?>">사용자 설정</a></li>
+                        <li class="text-lg sm:text-xl lg:text-2xl my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
+                        <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(admin_url('profile.php')); ?>">사용자 설정</a></li>
                         <?php if ($is_admin): ?>
-                            <li class="my-0.5"><a class="hoveronlyButton text-md" href="<?php echo esc_url(admin_url()); ?>">관리자 설정판</a></li>
+                            <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(admin_url()); ?>">관리자 설정판</a></li>
                         <?php endif; ?>
-                        <li class="my-0.5"><a class="hoveronlyButton text-md" href="<?php echo esc_url(wp_logout_url(home_url())); ?>">로그아웃</a></li>
+                        <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(wp_logout_url(home_url())); ?>">로그아웃</a></li>
                     <?php else: ?>
                         <!-- 로그인하지 않은 경우 -->
                         <li class="text-lg my-0.5 mx-2">Anonymous</li>
-                        <li class="my-0.5"><a class="hoveronlyButton text-md" href="<?php echo esc_url(wp_login_url()); ?>">로그인</a></li>
+                        <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(wp_login_url()); ?>">로그인</a></li>
                     <?php endif; ?>
                 </ul>
             </div>
@@ -240,13 +240,13 @@
                 wp_nav_menu(array(
                     'theme_location' => 'primary',
                     'container'      => false,
-                    'menu_class'     => 'menu menu-horizontal rounded-box rounded-r-none -mr-2 text-md -mt-1',
+                    'menu_class'     => 'menu menu-horizontal rounded-box rounded-r-none -mr-2 text-lg lg:text-xl -mt-1',
                     'items_wrap'     => '<ul id="%1$s" class="%2$s">%3$s</ul>',
                 ));
                 wp_nav_menu(array(
                     'theme_location' => 'external',
                     'container'      => false,
-                    'menu_class'     => 'menu menu-horizontal rounded-box rounded-l-none -ml-2 text-md -mt-1',
+                    'menu_class'     => 'menu menu-horizontal rounded-box rounded-l-none -ml-2 text-lg lg:text-xl -mt-1',
                     'items_wrap'     => '<ul id="%1$s" class="%2$s">%3$s</ul>',
                 ));
                 ?>
