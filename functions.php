@@ -17,6 +17,9 @@ function melted_mint_setup() {
 add_action('after_setup_theme', 'melted_mint_setup');
 ?>
 
+<!-- For Unique URL -->
+
+
 <!-- external -->
 
 <?php
@@ -41,6 +44,37 @@ function custom_posting_template($template) {
     return $template; // 기본 템플릿 유지
 }
 add_filter('category_template', 'custom_posting_template');
+?>
+
+<!-- edit pages! -->
+<?php
+function custom_edit_template($template) {
+    if (is_category('edit')) { // Blog 카테고리 ID 확인
+        $custom_template = locate_template('page-edit.php'); // page-blog.php 불러오기
+        if ($custom_template) {
+            return $custom_template;
+        }
+    }
+    return $template; // 기본 템플릿 유지
+} 
+?>
+
+<!-- view my pages! -->
+<?php
+
+function custom_view_my_posts_template($template) {
+    // is_page('my-posts') -> slug가 my-posts인지 확인
+    if ( is_page('my-posts') ) {
+        // page-my-posts.php가 테마 안에 존재하는지 locate_template로 확인
+        $custom_template = locate_template('page-my-posts.php');
+        if ( $custom_template ) {
+            return $custom_template;
+        }
+    }
+    // 아니면 기본 템플릿
+    return $template;
+}
+add_filter('page_template', 'custom_view_my_posts_template');
 ?>
 
 <!-- blogs -->

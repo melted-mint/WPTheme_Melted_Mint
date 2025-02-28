@@ -64,7 +64,7 @@
 
             <!-- 돋보기 아이콘 (md 미만에서만 보여서 검색창 드롭다운) -->
             <div class="dropdown dropdown-end sm:hidden">
-                <label tabindex="0" class="btn btn-sm xs:btn-md btn-ghost btn-circle">
+                <label tabindex="0" class="btn btn-sm sm:btn-md btn-ghost btn-circle">
                 <!-- magnifying glass icon -->
                 <svg 
                     xmlns="http://www.w3.org/2000/svg" 
@@ -187,10 +187,11 @@
                     </div>
                 </label>
 
-                <ul tabindex="0" class="menu menu-sm dropdown-content rounded-box z-[1] mt-4 w-auto p-2 shadows text-center">
+                <ul tabindex="0" class="menu menu-sm dropdown-content rounded-box z-[1] mt-4 p-2 shadows text-center">
                     <?php if ($is_logged_in): ?>
                         <!-- 로그인한 경우 -->
-                        <li class="text-lg sm:text-xl lg:text-2xl my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
+                        <li class="text-lg sm:text-xl min-w-30 lg:text-2xl my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
+                        <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo site_url('/my-posts'); ?>">내가 쓴 글</a></li>
                         <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(admin_url('profile.php')); ?>">사용자 설정</a></li>
                         <?php if ($is_admin): ?>
                             <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(admin_url()); ?>">관리자 설정판</a></li>
@@ -198,7 +199,7 @@
                         <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(wp_logout_url(home_url())); ?>">로그아웃</a></li>
                     <?php else: ?>
                         <!-- 로그인하지 않은 경우 -->
-                        <li class="text-lg my-0.5 mx-2">Anonymous</li>
+                        <li class="text-lg min-w-30 my-0.5 mx-2">Anonymous</li>
                         <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(wp_login_url()); ?>">로그인</a></li>
                     <?php endif; ?>
                 </ul>
@@ -206,10 +207,10 @@
 
             <div class="dropdown dropdown-end pr-2">
                 <!-- 햄버거 아이콘 (메뉴 토글) -->
-                <label tabindex="0" role="button" class="btn btn-ghost btn-sm xs:btn-md btn-circle rounded-sm md:hidden">
+                <label tabindex="0" role="button" class="btn btn-ghost btn-sm sm:btn-md btn-circle rounded-sm md:hidden">
                     <!-- hamburger icon -->
                     <svg
-                    class="fill-current w-5 h-5 xs:w-7 xs:h-7"
+                    class="fill-current w-5 h-5 sm:w-7 sm:h-7"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 512 512">
                     <path d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z" />

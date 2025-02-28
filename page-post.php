@@ -6,62 +6,59 @@ Template Name: Post
 // 1) 로그인/권한 체크
 $current_user = wp_get_current_user();
 $is_admin  = current_user_can('administrator');
-$is_editor = current_user_can('editor');
+$is_contributor = current_user_can('contributor');
 if ( ! is_user_logged_in() ) {
     wp_redirect( wp_login_url( home_url('/') ) );
     exit;
 }
 
-// 2) 주 카테고리 권한
-$allowed_cats = array(
+// 2) 페이지 선택 권한 (슬러그 기준)
+$allowed_pages = array(
     'blog'      => ($is_admin),
     'novel'     => ($is_admin),
-    'spinoff'   => ($is_editor || $is_admin),
+    'spinoff'   => ($is_contributor || $is_admin),
     'community' => true
 );
 
-// 3) 주 카테고리 -> 실제 ID
-$cat_map = array(
-    'blog'      => 8,
-    'novel'     => 17,
-    'spinoff'   => 20,
-    'community' => 22
+// 3) 페이지별 카테고리 매핑 (동적 표시용)
+$page_category_map = array(
+    'blog'      => array(8, 9, 10, 11, 12),
+    'novel'     => array(38, 18),
+    'spinoff'   => array(20),
+    'community' => array(9, 10, 11, 12, 34)
 );
+// 각 카테고리의 이름도 가져와서 매핑 (버튼 표시용)
+$page_category_detailed = array();
+foreach ($page_category_map as $page_slug => $cat_ids) {
+    $page_category_detailed[$page_slug] = array();
+    foreach ($cat_ids as $cid) {
+        $term = get_category($cid);
+        $page_category_detailed[$page_slug][] = array(
+            'id'   => $cid,
+            'name' => ($term && !is_wp_error($term)) ? $term->name : $cid
+        );
+    }
+}
 
-// 4) “게시판별” 추가 카테고리 목록 매핑 (예시)
-$cat_for_section = array(
-    'blog' => array(8, 9),       // blog 섹션에서 허용할 카테고리 ID들 (예: 8,9)
-    'novel' => array(17, 18),
-    'spinoff' => array(20, 21),
-    'community' => array(22, 23)
-);
+// 4) 기존 태그 가져오기
+$all_tags = get_tags(array('hide_empty' => false));
 
-// 5) 모든 태그
-$all_tags = get_tags(array('hide_empty'=>false));
-
-// 6) 폼 전송 처리
+// 5) 폼 전송 처리
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_post']) ) {
-    $section = sanitize_text_field($_POST['post_section']);
-    if ( empty($allowed_cats[$section]) ) wp_die('권한 없음');
+    $page = sanitize_text_field($_POST['post_page']);
+    if ( empty($allowed_pages[$page]) ) wp_die('권한 없음');
 
     $post_title   = sanitize_text_field($_POST['post_title']);
-    $post_content = wp_kses_post($_POST['post_content']);
     $post_desc    = sanitize_text_field($_POST['post_description']);
-    $post_tags    = sanitize_text_field($_POST['post_tags']);
-    $primary_cat_id = isset($cat_map[$section]) ? intval($cat_map[$section]) : 0;
+    $post_content = wp_kses_post($_POST['post_content']);
 
-    // 새 태그 추가
-    $new_tag = sanitize_text_field($_POST['new_tag']);
-    if ($new_tag) {
-        $post_tags .= ($post_tags ? ',' : '') . $new_tag;
-    }
+    // 선택한 카테고리 (동적 버튼에서 선택한 값)
+    $selected_cat = intval($_POST['selected_category']);
 
-    // 추가 카테고리 (체크박스들)
-    $additional_cats = array();
-    if ( isset($_POST['additional_cats']) && is_array($_POST['additional_cats']) ) {
-        $additional_cats = array_map('intval', $_POST['additional_cats']);
-    }
-
+    // 태그 선택 처리 (선택된 태그 버튼들과 새로 추가한 태그)
+    $selected_tags = isset($_POST['selected_tags']) ? sanitize_text_field($_POST['selected_tags']) : '';
+    $post_tags     = $selected_tags;
+    
     // 썸네일 업로드
     $thumb_id = 0;
     if ( ! empty($_FILES['thumbnail']['name']) ) {
@@ -74,17 +71,13 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_post']) ) {
         }
     }
 
-    // 최종 카테고리 (주 + 추가)
-    $final_cats = array_merge( array($primary_cat_id), $additional_cats );
-    $final_cats = array_unique($final_cats);
-
-    // 글 작성
+    // 글 작성 (카테고리는 선택한 카테고리 값)
     $new_post = array(
         'post_title'   => $post_title,
         'post_content' => $post_content,
         'post_status'  => 'publish',
         'post_author'  => get_current_user_id(),
-        'post_category'=> $final_cats,
+        'post_category'=> array($selected_cat),
         'tags_input'   => explode(',', $post_tags),
     );
     $post_id = wp_insert_post($new_post);
@@ -92,7 +85,8 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_post']) ) {
         update_post_meta($post_id, 'description', $post_desc);
         if ($thumb_id) set_post_thumbnail($post_id, $thumb_id);
 
-        $redir = home_url("/{$section}/?success=1");
+        // 작성 후 리다이렉션
+        $redir = home_url("/{$page}/?success=1");
         wp_redirect($redir);
         exit;
     }
@@ -104,116 +98,222 @@ $editor_settings = array(
     'media_buttons' => true,
     'teeny'         => false,
     'tinymce'       => array(
-        'height' => 300,
+        'height'  => 300,
         'plugins' => 'lists,link,image,media,code,table,advlist,fullscreen,charmap,hr',
         'toolbar1'=> 'formatselect,bold,italic,underline,alignleft,aligncenter,alignright,bullist,numlist,link,image,media,table,code,undo,redo'
     ),
     'quicktags' => true
 );
 
-// 미디어 업로드
 wp_enqueue_media();
 get_header();
 ?>
 
 <div class="max-w-3xl mx-auto p-6 bg-base-100 shadow-lg rounded-lg">
-    <h2 class="text-2xl font-bold mb-4">Page-based Posting</h2>
-
+    <h2 class="text-2xl font-bold mb-4">페이지 기반 글 작성</h2>
     <form method="post" enctype="multipart/form-data">
-
-        <!-- 1) 주 카테고리(게시판) 선택 (라디오) -->
-        <label class="block mb-2 font-semibold">게시판(주 카테고리) 선택</label>
-        <?php foreach($allowed_cats as $sect=>$allowed): ?>
-          <?php if($allowed): ?>
-            <label class="inline-flex items-center mr-4">
-              <input type="radio" name="post_section" value="<?php echo esc_attr($sect); ?>" class="mr-1"> 
-              <?php echo ucfirst($sect); ?>
-            </label>
-          <?php endif; ?>
-        <?php endforeach; ?>
-
-        <!-- 2) 제목 -->
-        <label class="block mt-4 mb-2 font-semibold">제목</label>
+        <!-- 1) 제목 (필수) -->
+        <label class="block mb-2 font-semibold">제목 <span class="text-red-500">*</span></label>
         <input type="text" name="post_title" required class="w-full p-2 border rounded-md">
 
-        <!-- 3) 내용 (TinyMCE) -->
-        <label class="block mt-4 mb-2 font-semibold">내용</label>
-        <?php wp_editor('', 'post_content_editor_id', $editor_settings); ?>
-
-        <!-- 4) Description -->
+        <!-- 2) Description (옵션) -->
         <label class="block mt-4 mb-2 font-semibold">Description</label>
-        <textarea name="post_description" class="w-full p-2 border rounded-md"></textarea>
+        <textarea name="post_description" class="w-full p-2 border rounded-md" placeholder="글 설명 (선택)"></textarea>
 
-        <!-- 5) 기존 태그 다중 선택 -->
-        <label class="block mt-4 mb-2 font-semibold">기존 태그 선택</label>
-        <select name="post_tags" multiple class="w-full p-2 border rounded-md">
-          <?php foreach($all_tags as $tag): ?>
-            <option value="<?php echo esc_attr($tag->name); ?>">
-              <?php echo esc_html($tag->name); ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-
-        <!-- 5-1) 새 태그 추가 -->
-        <label class="block mt-4 mb-2 font-semibold">새 태그 추가</label>
-        <input type="text" name="new_tag" class="w-full p-2 border rounded-md" placeholder="새 태그 입력">
-
-        <!-- 6) 추가 카테고리(체크박스들), 섹션별로 구분 -->
-        <label class="block mt-4 mb-2 font-semibold">추가 카테고리</label>
-        <?php foreach ($cat_for_section as $sect_key => $cat_ids): ?>
-            <!-- 각 섹션마다 div -->
-            <div id="cat_section_<?php echo esc_attr($sect_key); ?>" class="cat-section hidden ml-2">
-                <p class="text-sm mb-1">[<?php echo ucfirst($sect_key); ?> 전용 카테고리]</p>
-                <?php foreach($cat_ids as $cid): 
-                    $term = get_category($cid);
-                    if ($term && ! is_wp_error($term)): ?>
-                    <label class="inline-flex items-center mr-2">
-                        <input type="checkbox" name="additional_cats[]" value="<?php echo esc_attr($term->term_id); ?>">
-                        <span class="ml-1"><?php echo esc_html($term->name); ?></span>
-                    </label>
-                <?php endif; endforeach; ?>
-            </div>
-        <?php endforeach; ?>
-
-        <!-- 7) 썸네일 업로드 -->
+        <!-- 3) 썸네일 업로드 (옵션) -->
         <label class="block mt-4 mb-2 font-semibold">썸네일(대표이미지)</label>
         <input type="file" name="thumbnail" accept="image/*">
 
-        <!-- 8) 제출 버튼 -->
-        <button type="submit" name="submit_post" class="mt-4 p-3 bg-primary text-white rounded-md">
-            작성 완료
-        </button>
+        <!-- 4) 게시할 페이지(슬러그) 선택 - 버튼 형식 -->
+        <label class="block mt-4 mb-2 font-semibold">게시할 페이지 선택</label>
+        <div class="flex space-x-4">
+            <?php foreach($allowed_pages as $page_slug => $allowed): ?>
+                <?php if($allowed): ?>
+                    <button type="button" class="page-select-btn px-4 py-2 border rounded-md" data-page="<?php echo esc_attr($page_slug); ?>">
+                        <?php echo ucfirst($page_slug); ?>
+                    </button>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+        <!-- 선택된 페이지값을 저장할 hidden 필드 -->
+        <input type="hidden" name="post_page" id="selected_page" required>
+
+        <!-- 5) 페이지 선택 후, 동적으로 표시되는 카테고리 버튼 -->
+        <label class="block mt-4 mb-2 font-semibold">카테고리 선택 (하나만)</label>
+        <div id="category-buttons" class="flex flex-wrap gap-2"></div>
+        <input type="hidden" name="selected_category" id="selected_category" required>
+
+        <!-- 6) 기존 태그 선택 (버튼 나열) -->
+        <label class="block mt-4 mb-2 font-semibold">태그 선택</label>
+        <div id="tag-buttons" class="flex flex-wrap gap-2">
+            <?php foreach($all_tags as $tag): ?>
+                <button type="button" class="tag-btn px-3 py-1 border rounded-md" data-tag="<?php echo esc_attr($tag->name); ?>">
+                    <?php echo esc_html($tag->name); ?>
+                </button>
+            <?php endforeach; ?>
+        </div>
+        <!-- 선택된 태그들을 저장할 hidden 필드 -->
+        <input type="hidden" name="selected_tags" id="selected_tags">
+
+        <!-- 7) 새 태그 추가 (엔터키 입력 시 버튼 생성) -->
+        <label class="block mt-4 mb-2 font-semibold">새 태그 추가</label>
+        <input type="text" id="new_tag_input" class="w-full p-2 border rounded-md" placeholder="새 태그 입력 후 엔터">
+
+        <!-- 8) 에디터 (글 내용 작성) -->
+        <label class="block mt-4 mb-2 font-semibold">내용</label>
+        <?php wp_editor('', 'post_content_editor_id', $editor_settings); ?>
+
+        <!-- 9) 버튼들 (입력 완료, 임시저장, 취소) -->
+        <div class="flex justify-end gap-3 mt-6">
+            <button type="submit" name="submit_post" class="p-3 bg-primary text-white rounded-md">
+                입력 완료
+            </button>
+            <button type="button" id="save-draft" class="p-3 bg-secondary text-white rounded-md">
+                임시저장
+            </button>
+            <a href="<?php echo home_url(); ?>" class="p-3 bg-gray-500 text-white rounded-md">
+                취소
+            </a>
+        </div>
     </form>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 라디오 버튼 변경 시 cat-section 표시/숨김
-    let radioButtons = document.querySelectorAll('input[name="post_section"]');
-    let catSections = document.querySelectorAll('.cat-section');
+// 페이지 선택 시 동작 및 카테고리 동적 업데이트
+const pageCategoryMap = <?php echo json_encode($page_category_detailed); ?>;
 
-    function updateCatSection() {
-        // 모든 cat-section 숨김
-        catSections.forEach(div => div.classList.add('hidden'));
-
-        // 현재 선택된 라디오
-        let selected = document.querySelector('input[name="post_section"]:checked');
-        if (selected) {
-            let sect = selected.value;
-            let targetDiv = document.getElementById('cat_section_' + sect);
-            if (targetDiv) {
-                targetDiv.classList.remove('hidden');
-            }
+document.querySelectorAll('.page-select-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // 페이지 버튼 active 스타일 처리 (단일 선택)
+        document.querySelectorAll('.page-select-btn').forEach(b => b.classList.remove('bg-primary','text-white'));
+        this.classList.add('bg-primary','text-white');
+        // 선택된 페이지값 저장
+        const selectedPage = this.getAttribute('data-page');
+        document.getElementById('selected_page').value = selectedPage;
+        
+        // 동적으로 카테고리 버튼 생성
+        const catContainer = document.getElementById('category-buttons');
+        catContainer.innerHTML = '';
+        if (pageCategoryMap[selectedPage]) {
+            pageCategoryMap[selectedPage].forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cat-btn px-3 py-1 border rounded-md';
+                btn.setAttribute('data-cat-id', item.id);
+                // 버튼에 이름만 표기하도록 수정
+                btn.textContent = item.name;
+                btn.addEventListener('click', function() {
+                    // 단일 선택: 다른 버튼의 active 스타일 제거
+                    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('bg-primary','text-white'));
+                    this.classList.add('bg-primary','text-white');
+                    document.getElementById('selected_category').value = this.getAttribute('data-cat-id');
+                });
+                catContainer.appendChild(btn);
+            });
         }
-    }
-
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', updateCatSection);
     });
+});
 
-    // 초기 실행
-    updateCatSection();
+// 이미 선택된 태그들을 담는 배열
+let selectedTags = [];
+
+// 1) 기존 태그 버튼(페이지 로딩 시 생성된 것) 선택/해제 로직
+document.querySelectorAll('.tag-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tag = this.getAttribute('data-tag');
+        if (this.classList.contains('bg-primary')) {
+            // 이미 선택된 상태 -> 선택 해제
+            this.classList.remove('bg-primary','text-white');
+            selectedTags = selectedTags.filter(t => t !== tag);
+        } else {
+            // 선택되지 않은 상태 -> 선택
+            this.classList.add('bg-primary','text-white');
+            selectedTags.push(tag);
+        }
+        document.getElementById('selected_tags').value = selectedTags.join(',');
+    });
+});
+
+// 2) 새 태그 추가: 엔터키 입력 시 버튼 생성 & 자동 선택
+document.getElementById('new_tag_input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();  // 엔터로 인한 폼 제출 방지
+
+        const tag = this.value.trim();
+        if (!tag) return;  // 빈 문자열이면 중단
+
+        // (1) 공백이 있는지 체크
+        if (tag.includes(' ')) {
+            alert('공백은 허용되지 않습니다.');
+            this.value = '';
+            return;
+        }
+
+        // (2) 이미 선택된 태그인지 확인
+        if (selectedTags.includes(tag)) {
+            alert('이미 선택된 태그입니다.');
+            this.value = '';
+            return;
+        }
+
+        // (3) 기존 태그 버튼이 있는지 확인 (data-tag 값 비교)
+        const existingBtn = document.querySelector(`.tag-btn[data-tag="${tag}"]`);
+        if (existingBtn) {
+            // 이미 존재하는 태그 버튼이 있을 경우, 그 버튼을 선택 상태로 전환
+            if (!existingBtn.classList.contains('bg-primary')) {
+                existingBtn.classList.add('bg-primary','text-white');
+                selectedTags.push(tag);
+                document.getElementById('selected_tags').value = selectedTags.join(',');
+            }
+            this.value = '';
+            return;
+        }
+
+        // (4) 여기까지 왔다면 중복 없음 -> 새 태그 버튼 생성
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tag-btn px-3 py-1 border rounded-md bg-primary text-white';
+        btn.setAttribute('data-tag', tag);
+        // 새로 생성된 태그임을 표시 (토글 off 시 삭제용)
+        btn.setAttribute('data-new', 'true');
+        btn.textContent = tag;
+
+        // 새 버튼 클릭 시 토글 처리
+        btn.addEventListener('click', function() {
+            const t = this.getAttribute('data-tag');
+            if (this.classList.contains('bg-primary')) {
+                // 현재 선택 상태 -> 선택 해제
+                this.classList.remove('bg-primary','text-white');
+                selectedTags = selectedTags.filter(item => item !== t);
+                document.getElementById('selected_tags').value = selectedTags.join(',');
+
+                // 만약 새로 만든 태그(data-new="true")라면 DOM에서 제거
+                if (this.getAttribute('data-new') === 'true') {
+                    this.remove();
+                }
+            } else {
+                // 선택되지 않은 상태 -> 선택
+                this.classList.add('bg-primary','text-white');
+                selectedTags.push(t);
+                document.getElementById('selected_tags').value = selectedTags.join(',');
+            }
+        });
+
+        // 자동 추가 및 active 처리
+        selectedTags.push(tag);
+        document.getElementById('selected_tags').value = selectedTags.join(',');
+
+        // 태그 버튼 영역에 삽입
+        document.getElementById('tag-buttons').appendChild(btn);
+
+        // 입력 필드 초기화
+        this.value = '';
+    }
+});
+
+// 3) 임시저장 버튼 (추후 draft 저장 로직 구현)
+document.getElementById('save-draft').addEventListener('click', function() {
+    alert('임시저장 기능은 추후 구현 예정입니다.');
 });
 </script>
-
 <?php get_footer(); ?>

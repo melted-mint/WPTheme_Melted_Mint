@@ -7,16 +7,16 @@ get_header();
 ?>
 
 <!-- 최대 폭/여백 설정 -->
-<div class="max-w-[80rem] mx-auto lg:px-4 py-8">
+<div class="max-w-[80rem] mx-auto sm:px-4 py-4">
 
     <!-- 1) 두 칸(Grid)으로 Blog / Community -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4">
         
         <!-- 왼쪽: Blog 영역 -->
         <div class="flex flex-col gap-4">
             <!-- 상단 박스 (클릭 시 /blog 이동) -->
             <a href="<?php echo site_url('/blog'); ?>"
-               class="cardComponent text-center text-xl sm:text-2xl font-bold flex items-center justify-center h-12 sm:h-18 w-65 sm:w-80 mx-auto rounded-lg">
+               class="cardComponent text-center text-xl sm:text-2xl font-bold flex items-center justify-center h-12 sm:h-18 w-80 sm:w-100 mx-auto rounded-lg">
                Recent Blog Posts
             </a>
             
@@ -52,7 +52,7 @@ get_header();
         <div class="flex flex-col gap-4">
             <!-- 상단 박스 (클릭 시 /community 이동) -->
             <a href="<?php echo site_url('/community'); ?>"
-               class="cardComponent text-center text-xl sm:text-2xl font-bold flex items-center justify-center h-12 sm:h-18 w-65 sm:w-80 mx-auto rounded-lg">
+               class="cardComponent text-center text-xl sm:text-2xl font-bold flex items-center justify-center h-12 sm:h-18 w-80 sm:w-100 mx-auto rounded-lg">
                Recent Community Posts
             </a>
 
