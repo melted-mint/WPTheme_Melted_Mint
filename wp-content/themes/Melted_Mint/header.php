@@ -52,7 +52,7 @@
                 <input
                 type="text"
                 name="s"
-                placeholder="Search"
+                placeholder="검색..."
                 class="input input-bordered w-full cardComponent"
                 value="<?php echo get_search_query(); ?>"
                 />
@@ -96,7 +96,7 @@
                     <input
                         type="text"
                         name="s"
-                        placeholder="Search"
+                        placeholder="검색..."
                         class="input input-bordered w-full"
                         value="<?php echo get_search_query(); ?>"
                     />
@@ -120,7 +120,7 @@
                         <!-- 왼쪽: 🎨 아이콘 + 제목 + 초기화 버튼 -->
                         <div class="flex items-center gap-2">
                             <span class="smallBoxComponent rounded-full h-4">&nbsp;</span>
-                            <h2 class="text-md font-semibold">Theme Color</h2>
+                            <h2 class="text-md font-semibold">테마 색</h2>
                             <!-- reset button -->
                             <button id="resetHue" class="btn rounded-md btn-xs btn-circle buttonComponent btn-ghost">
                             <svg class="w-3 h-3" viewBox="0 0 18 18" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -187,10 +187,10 @@
                     </div>
                 </label>
 
-                <ul tabindex="0" class="menu menu-sm dropdown-content rounded-box z-[1] mt-4 p-2 shadows text-center">
+                <ul tabindex="0" class="menu menu-sm w-fit dropdown-content rounded-box z-[1] mt-4 p-2 shadows text-center">
                     <?php if ($is_logged_in): ?>
                         <!-- 로그인한 경우 -->
-                        <li class="text-lg sm:text-xl min-w-30 lg:text-2xl my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
+                        <li class="text-lg w-fit sm:text-xl lg:text-2xl my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
                         <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo site_url('/my-posts'); ?>">내가 쓴 글</a></li>
                         <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(admin_url('profile.php')); ?>">사용자 설정</a></li>
                         <?php if ($is_admin): ?>
@@ -199,7 +199,7 @@
                         <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(wp_logout_url(home_url())); ?>">로그아웃</a></li>
                     <?php else: ?>
                         <!-- 로그인하지 않은 경우 -->
-                        <li class="text-lg min-w-30 my-0.5 mx-2">Anonymous</li>
+                        <li class="text-lg min-w-30 my-0.5 mx-2">익명</li>
                         <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(wp_login_url()); ?>">로그인</a></li>
                     <?php endif; ?>
                 </ul>

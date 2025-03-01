@@ -1,32 +1,4 @@
 <?php
-/**
- * core.php
- *
- * 1) Hides default "Posts" menu (edit.php).
- * 2) Registers 4 CPTs (blog, novel, spinoff, community).
- * 3) "All Posts" menu to display merged CPT.
- * 4) Adds submenus for Category/Tag management under "All Posts".
- * 5) (추가) Blog CPT 퍼머링크를 /%category%/%year%/%monthnum%/%day%/%hour%/%post_id%/ 로 만들기
- *
- * Usage:
- * - Place this file in your theme folder.
- * - In functions.php, add:
- *       require_once get_template_directory() . '/plugins/core.php';
- * - Go to "Settings > Permalinks" and click "Save" once to refresh rewrite rules.
- */
-
-/*-----------------------------------------------------------
- | 1) Hide default "Posts" menu
- -----------------------------------------------------------*/
-add_action('admin_menu', 'remove_default_post_type_menu');
-function remove_default_post_type_menu() {
-    // Hides the default "Posts" menu (edit.php).
-    remove_menu_page('edit.php');
-}
-
-/*-----------------------------------------------------------
- | 2) Register 4 CPTs
- -----------------------------------------------------------*/
 function melted_mint_register_custom_post_types() {
 
     // --- 1) Blog ---
@@ -55,10 +27,15 @@ function melted_mint_register_custom_post_types() {
             'menu_name'             => 'Blog',
         ),
         'public'              => true,
-        // ★ Blog는 /%category%/%year%/... 구조로 할 것이므로 WP 기본 rewrite OFF
-        'has_archive'         => false,  // 아카이브도 OFF (원한다면 별도 규칙)
-        'rewrite'             => false,  // <-- 중요
-        'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields' ),
+        'has_archive'         => false,  // ★
+        'rewrite'             => false,  // ★
+        'supports'            => array( 
+            'title', 
+            'editor', 
+            'thumbnail', 
+            'excerpt', 
+            'custom-fields' 
+        ),
         'menu_icon'           => 'dashicons-edit',
         'menu_position'       => 5,
         'show_in_rest'        => true,
@@ -99,12 +76,15 @@ function melted_mint_register_custom_post_types() {
             'menu_name'             => 'Novel',
         ),
         'public'              => true,
-        'has_archive'         => true,
-        'rewrite'             => array(
-            'slug'       => 'novel',
-            'with_front' => false,
+        'has_archive'         => false,  // ★
+        'rewrite'             => false,  // ★
+        'supports'            => array( 
+            'title', 
+            'editor', 
+            'thumbnail', 
+            'excerpt', 
+            'custom-fields' 
         ),
-        'supports'            => array( 'title', 'editor', 'thumbnail' ),
         'menu_icon'           => 'dashicons-book',
         'menu_position'       => 6,
         'show_in_rest'        => true,
@@ -145,12 +125,15 @@ function melted_mint_register_custom_post_types() {
             'menu_name'             => 'Spinoff',
         ),
         'public'              => true,
-        'has_archive'         => true,
-        'rewrite'             => array(
-            'slug'       => 'spinoff',
-            'with_front' => false,
+        'has_archive'         => false,  // ★
+        'rewrite'             => false,  // ★
+        'supports'            => array( 
+            'title', 
+            'editor', 
+            'thumbnail', 
+            'excerpt', 
+            'custom-fields' 
         ),
-        'supports'            => array( 'title', 'editor', 'thumbnail' ),
         'menu_icon'           => 'dashicons-randomize',
         'menu_position'       => 7,
         'show_in_rest'        => true,
@@ -191,12 +174,15 @@ function melted_mint_register_custom_post_types() {
             'menu_name'             => 'Community',
         ),
         'public'              => true,
-        'has_archive'         => true,
-        'rewrite'             => array(
-            'slug'       => 'community',
-            'with_front' => false,
+        'has_archive'         => false,  // ★
+        'rewrite'             => false,  // ★
+        'supports'            => array( 
+            'title', 
+            'editor', 
+            'thumbnail', 
+            'excerpt', 
+            'custom-fields' 
         ),
-        'supports'            => array( 'title', 'editor', 'thumbnail' ),
         'menu_icon'           => 'dashicons-groups',
         'menu_position'       => 8,
         'show_in_rest'        => true,
@@ -213,99 +199,3 @@ function melted_mint_register_custom_post_types() {
 
 }
 add_action('init', 'melted_mint_register_custom_post_types');
-
-
-/*-----------------------------------------------------------
- | 3) "All Posts" menu to display merged CPT
- -----------------------------------------------------------*/
-add_action('admin_menu', 'add_all_posts_merged_menu');
-function add_all_posts_merged_menu() {
-    // 메인 메뉴 (All Posts)
-    add_menu_page(
-        'All Posts Merged',
-        'All Posts',
-        'edit_posts',
-        'all-posts-merged',
-        'render_all_posts_merged',
-        'dashicons-admin-post',
-        5
-    );
-
-    // 서브메뉴: 카테고리
-    add_submenu_page(
-        'all-posts-merged',
-        'Manage Categories',
-        'Categories',
-        'manage_categories',
-        'edit-tags.php?taxonomy=category'
-    );
-
-    // 서브메뉴: 태그
-    add_submenu_page(
-        'all-posts-merged',
-        'Manage Tags',
-        'Tags',
-        'manage_categories',
-        'edit-tags.php?taxonomy=post_tag'
-    );
-}
-
-function render_all_posts_merged() {
-    // 권한 체크
-    if ( ! current_user_can('edit_posts') ) {
-        wp_die('You do not have permission to access this page.');
-    }
-
-    echo '<div class="wrap"><h1>All Posts (Merged)</h1>';
-
-    // WP_Query: 4개 CPT 통합
-    $all_post_types = array('blog','novel','spinoff','community');
-    $args = array(
-        'post_type'      => $all_post_types,
-        'posts_per_page' => 50,
-        'orderby'        => 'date',
-        'order'          => 'DESC',
-    );
-    $merged_query = new WP_Query($args);
-
-    if ( $merged_query->have_posts() ) {
-        echo '<table class="widefat fixed striped">';
-        echo '<thead><tr><th>Title</th><th>Type</th><th>Date</th><th>Actions</th></tr></thead>';
-        echo '<tbody>';
-
-        while ( $merged_query->have_posts() ) {
-            $merged_query->the_post();
-
-            $post_id   = get_the_ID();
-            $post_type = get_post_type();
-            $title     = get_the_title();
-            $date      = get_the_date('Y-m-d');
-
-            // 수정/삭제 링크
-            $edit_link   = get_edit_post_link($post_id);
-            $delete_link = get_delete_post_link($post_id);
-
-            echo '<tr>';
-            echo '<td><strong>' . esc_html($title) . '</strong></td>';
-            echo '<td>' . esc_html($post_type) . '</td>';
-            echo '<td>' . esc_html($date) . '</td>';
-            echo '<td>';
-            if ($edit_link) {
-                echo '<a href="' . esc_url($edit_link) . '">Edit</a> | ';
-            }
-            if ($delete_link) {
-                echo '<a href="' . esc_url($delete_link) . '" style="color:red;">Delete</a>';
-            }
-            echo '</td>';
-            echo '</tr>';
-        }
-
-        echo '</tbody></table>';
-
-        wp_reset_postdata();
-    } else {
-        echo '<p>No posts found.</p>';
-    }
-
-    echo '</div>';
-}

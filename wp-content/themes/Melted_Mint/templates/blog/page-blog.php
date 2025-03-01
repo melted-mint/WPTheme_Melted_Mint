@@ -175,7 +175,7 @@ $blog_query = new WP_Query($blog_args);
             $wp_query = $temp_wp_query;
             wp_reset_postdata();
         } else {
-            echo '<p class="text-center p-4">No blog posts found.</p>';
+            echo '<p class="text-center p-4 cardComponent rounded-xl">아직 블로그에 올라온 글이 없어요...</p>';
         }
         ?>
     </main>

@@ -81,6 +81,7 @@ body {
 
 [data-theme="light"] .availableButton {
     color: oklch(0.4 0.03 var(--hue));
+    background-color: oklch(0.4 0.15 var(--hue));
 }
 
 [data-theme="light"] .availableButton:hover {
