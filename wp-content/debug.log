@@ -1900,3 +1900,45 @@ Stack trace:
 #8 /Users/mint/Documents/GitHub/WebSite/app/public/index.php(17): require('/Users/mint/Doc...')
 #9 {main}
   thrown in /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php on line 324
+[01-Mar-2025 03:23:48 UTC] PHP Fatal error:  Uncaught Error: Class "All_Posts_List_Table" not found in /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/themes/Melted_Mint/functions.php:167
+Stack trace:
+#0 /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php(324): render_all_posts_wplist('')
+#1 /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters('', Array)
+#2 /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/plugin.php(517): WP_Hook->do_action(Array)
+#3 /Users/mint/Documents/GitHub/WebSite/app/public/wp-admin/admin.php(259): do_action('toplevel_page_a...')
+#4 {main}
+  thrown in /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/themes/Melted_Mint/functions.php on line 167
+[01-Mar-2025 03:23:54 UTC] PHP Fatal error:  Uncaught Error: Class "All_Posts_List_Table" not found in /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/themes/Melted_Mint/functions.php:167
+Stack trace:
+#0 /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php(324): render_all_posts_wplist('')
+#1 /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters('', Array)
+#2 /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/plugin.php(517): WP_Hook->do_action(Array)
+#3 /Users/mint/Documents/GitHub/WebSite/app/public/wp-admin/admin.php(259): do_action('toplevel_page_a...')
+#4 {main}
+  thrown in /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/themes/Melted_Mint/functions.php on line 167
+[01-Mar-2025 04:43:29 UTC] PHP Warning:  Cannot modify header information - headers already sent by (output started at /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/script-loader.php:2938) in /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/pluggable.php on line 1435
+[01-Mar-2025 04:43:29 UTC] PHP Stack trace:
+[01-Mar-2025 04:43:29 UTC] PHP   1. {main}() /Users/mint/Documents/GitHub/WebSite/app/public/wp-admin/admin.php:0
+[01-Mar-2025 04:43:29 UTC] PHP   2. do_action($hook_name = 'toplevel_page_cp-post-permalinks') /Users/mint/Documents/GitHub/WebSite/app/public/wp-admin/admin.php:259
+[01-Mar-2025 04:43:29 UTC] PHP   3. WP_Hook->do_action($args = [0 => '']) /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/plugin.php:517
+[01-Mar-2025 04:43:29 UTC] PHP   4. WP_Hook->apply_filters($value = '', $args = [0 => '']) /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php:348
+[01-Mar-2025 04:43:29 UTC] PHP   5. Custom_Permalinks_Admin->post_permalinks_page('') /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php:324
+[01-Mar-2025 04:43:29 UTC] PHP   6. Custom_Permalinks_Post_Types_Table::output() /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/plugins/custom-permalinks/admin/class-custom-permalinks-admin.php:127
+[01-Mar-2025 04:43:29 UTC] PHP   7. Custom_Permalinks_Post_Types_Table->prepare_items() /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/plugins/custom-permalinks/admin/class-custom-permalinks-post-types-table.php:138
+[01-Mar-2025 04:43:29 UTC] PHP   8. Custom_Permalinks_Post_Types_Table->process_bulk_action() /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/plugins/custom-permalinks/admin/class-custom-permalinks-post-types-table.php:438
+[01-Mar-2025 04:43:29 UTC] PHP   9. wp_safe_redirect($location = 'http://localhost:10005/wp-admin/admin.php?page=cp-post-permalinks&paged=1', $status = *uninitialized*, $x_redirect_by = *uninitialized*) /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/plugins/custom-permalinks/admin/class-custom-permalinks-post-types-table.php:388
+[01-Mar-2025 04:43:29 UTC] PHP  10. wp_redirect($location = 'http://localhost:10005/wp-admin/admin.php?page=cp-post-permalinks&paged=1', $status = 302, $x_redirect_by = 'WordPress') /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/pluggable.php:1545
+[01-Mar-2025 04:43:29 UTC] PHP  11. header($header = 'X-Redirect-By: WordPress') /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/pluggable.php:1435
+[01-Mar-2025 04:43:29 UTC] PHP Warning:  Cannot modify header information - headers already sent by (output started at /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/script-loader.php:2938) in /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/pluggable.php on line 1438
+[01-Mar-2025 04:43:29 UTC] PHP Stack trace:
+[01-Mar-2025 04:43:29 UTC] PHP   1. {main}() /Users/mint/Documents/GitHub/WebSite/app/public/wp-admin/admin.php:0
+[01-Mar-2025 04:43:29 UTC] PHP   2. do_action($hook_name = 'toplevel_page_cp-post-permalinks') /Users/mint/Documents/GitHub/WebSite/app/public/wp-admin/admin.php:259
+[01-Mar-2025 04:43:29 UTC] PHP   3. WP_Hook->do_action($args = [0 => '']) /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/plugin.php:517
+[01-Mar-2025 04:43:29 UTC] PHP   4. WP_Hook->apply_filters($value = '', $args = [0 => '']) /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php:348
+[01-Mar-2025 04:43:29 UTC] PHP   5. Custom_Permalinks_Admin->post_permalinks_page('') /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/class-wp-hook.php:324
+[01-Mar-2025 04:43:29 UTC] PHP   6. Custom_Permalinks_Post_Types_Table::output() /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/plugins/custom-permalinks/admin/class-custom-permalinks-admin.php:127
+[01-Mar-2025 04:43:29 UTC] PHP   7. Custom_Permalinks_Post_Types_Table->prepare_items() /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/plugins/custom-permalinks/admin/class-custom-permalinks-post-types-table.php:138
+[01-Mar-2025 04:43:29 UTC] PHP   8. Custom_Permalinks_Post_Types_Table->process_bulk_action() /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/plugins/custom-permalinks/admin/class-custom-permalinks-post-types-table.php:438
+[01-Mar-2025 04:43:29 UTC] PHP   9. wp_safe_redirect($location = 'http://localhost:10005/wp-admin/admin.php?page=cp-post-permalinks&paged=1', $status = *uninitialized*, $x_redirect_by = *uninitialized*) /Users/mint/Documents/GitHub/WebSite/app/public/wp-content/plugins/custom-permalinks/admin/class-custom-permalinks-post-types-table.php:388
+[01-Mar-2025 04:43:29 UTC] PHP  10. wp_redirect($location = 'http://localhost:10005/wp-admin/admin.php?page=cp-post-permalinks&paged=1', $status = 302, $x_redirect_by = 'WordPress') /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/pluggable.php:1545
+[01-Mar-2025 04:43:29 UTC] PHP  11. header($header = 'Location: http://localhost:10005/wp-admin/admin.php?page=cp-post-permalinks&paged=1', $replace = TRUE, $response_code = 302) /Users/mint/Documents/GitHub/WebSite/app/public/wp-includes/pluggable.php:1438

@@ -6045,6 +6045,21 @@
       outline-offset: 2px;
     }
   }
+  .link\! {
+    cursor: pointer !important;
+    text-decoration-line: underline !important;
+    &:focus {
+      outline-style: none !important;
+      @media (forced-colors: active) {
+        outline: 2px solid transparent !important;
+        outline-offset: 2px !important;
+      }
+    }
+    &:focus-visible {
+      outline: 2px solid currentColor !important;
+      outline-offset: 2px !important;
+    }
+  }
   .cursor-not-allowed {
     cursor: not-allowed;
   }

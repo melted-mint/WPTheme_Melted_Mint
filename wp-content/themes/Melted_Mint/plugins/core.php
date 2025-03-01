@@ -1,16 +1,17 @@
 <?php
 /**
- * theme_plugins.php
+ * core.php
  *
  * 1) Hides default "Posts" menu (edit.php).
- * 2) Registers 4 CPTs (blog, novel, spinoff, community), each hidden from admin menu.
- * 3) Adds a single "All Posts" menu to display all 4 CPT in a merged list.
+ * 2) Registers 4 CPTs (blog, novel, spinoff, community).
+ * 3) "All Posts" menu to display merged CPT.
  * 4) Adds submenus for Category/Tag management under "All Posts".
+ * 5) (추가) Blog CPT 퍼머링크를 /%category%/%year%/%monthnum%/%day%/%hour%/%post_id%/ 로 만들기
  *
  * Usage:
  * - Place this file in your theme folder.
  * - In functions.php, add:
- *       require_once get_template_directory() . '/theme_plugins.php';
+ *       require_once get_template_directory() . '/plugins/core.php';
  * - Go to "Settings > Permalinks" and click "Save" once to refresh rewrite rules.
  */
 
@@ -24,11 +25,11 @@ function remove_default_post_type_menu() {
 }
 
 /*-----------------------------------------------------------
- | 2) Register 4 CPTs, each hidden from admin menu
+ | 2) Register 4 CPTs
  -----------------------------------------------------------*/
 function melted_mint_register_custom_post_types() {
 
-    // 1) Blog
+    // --- 1) Blog ---
     register_post_type( 'blog', array(
         'labels' => array(
             'name'                  => 'Blog Posts',
@@ -54,11 +55,9 @@ function melted_mint_register_custom_post_types() {
             'menu_name'             => 'Blog',
         ),
         'public'              => true,
-        'has_archive'         => true,
-        'rewrite'             => array(
-            'slug'       => 'blog',
-            'with_front' => false,
-        ),
+        // ★ Blog는 /%category%/%year%/... 구조로 할 것이므로 WP 기본 rewrite OFF
+        'has_archive'         => false,  // 아카이브도 OFF (원한다면 별도 규칙)
+        'rewrite'             => false,  // <-- 중요
         'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields' ),
         'menu_icon'           => 'dashicons-edit',
         'menu_position'       => 5,
@@ -70,13 +69,11 @@ function melted_mint_register_custom_post_types() {
         'show_in_nav_menus'   => true,
         'capability_type'     => 'post',
         'map_meta_cap'        => true,
-        /* Hide from admin menu (we'll show it in our own "All Posts") */
-        'show_in_menu'        => false,
-        /* Use default categories/tags */
+        'show_in_menu'        => true,
         'taxonomies'          => array('category', 'post_tag'),
     ));
 
-    // 2) Novel
+    // --- 2) Novel ---
     register_post_type( 'novel', array(
         'labels' => array(
             'name'                  => 'Novel Posts',
@@ -118,11 +115,11 @@ function melted_mint_register_custom_post_types() {
         'show_in_nav_menus'   => true,
         'capability_type'     => 'post',
         'map_meta_cap'        => true,
-        'show_in_menu'        => false,
+        'show_in_menu'        => true,
         'taxonomies'          => array('category', 'post_tag'),
     ));
 
-    // 3) Spinoff
+    // --- 3) Spinoff ---
     register_post_type( 'spinoff', array(
         'labels' => array(
             'name'                  => 'Spinoff Posts',
@@ -164,11 +161,11 @@ function melted_mint_register_custom_post_types() {
         'show_in_nav_menus'   => true,
         'capability_type'     => 'post',
         'map_meta_cap'        => true,
-        'show_in_menu'        => false,
+        'show_in_menu'        => true,
         'taxonomies'          => array('category', 'post_tag'),
     ));
 
-    // 4) Community
+    // --- 4) Community ---
     register_post_type( 'community', array(
         'labels' => array(
             'name'                  => 'Community Posts',
@@ -210,13 +207,12 @@ function melted_mint_register_custom_post_types() {
         'show_in_nav_menus'   => true,
         'capability_type'     => 'post',
         'map_meta_cap'        => true,
-        'show_in_menu'        => false,
+        'show_in_menu'        => true,
         'taxonomies'          => array('category', 'post_tag'),
     ));
 
 }
 add_action('init', 'melted_mint_register_custom_post_types');
-
 
 
 /*-----------------------------------------------------------
@@ -226,22 +222,22 @@ add_action('admin_menu', 'add_all_posts_merged_menu');
 function add_all_posts_merged_menu() {
     // 메인 메뉴 (All Posts)
     add_menu_page(
-        'All Posts Merged',         // 브라우저 탭의 페이지 제목
-        'All Posts',                // 관리자 메뉴에 표시될 제목
-        'edit_posts',               // 접근 권한
-        'all-posts-merged',         // 메뉴 slug
-        'render_all_posts_merged',  // 콜백 함수
-        'dashicons-admin-post',     // 아이콘
-        5                           // 위치
+        'All Posts Merged',
+        'All Posts',
+        'edit_posts',
+        'all-posts-merged',
+        'render_all_posts_merged',
+        'dashicons-admin-post',
+        5
     );
 
     // 서브메뉴: 카테고리
     add_submenu_page(
-        'all-posts-merged',                  // 상위 메뉴 slug
-        'Manage Categories',                 // 페이지 제목
-        'Categories',                        // 서브메뉴 제목
-        'manage_categories',                 // 권한
-        'edit-tags.php?taxonomy=category'    // WordPress 기본 카테고리 관리 링크
+        'all-posts-merged',
+        'Manage Categories',
+        'Categories',
+        'manage_categories',
+        'edit-tags.php?taxonomy=category'
     );
 
     // 서브메뉴: 태그
