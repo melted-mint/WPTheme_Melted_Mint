@@ -1,13 +1,31 @@
 <?php
+/**
+ * functions.php (정리 버전)
+ * 
+ * - theme_plugins.php 불러오기 (커스텀 포스트 타입 등)
+ * - CSS & JS 로드
+ * - 테마 메뉴 등록
+ * - external 메뉴 새 탭 처리
+ * - "my-posts" 페이지 템플릿 교체
+ * - 사이드바 등록
+ * - 로그인 쿠키 강제 삭제
+ * - 메뉴 링크에 클래스 추가
+ * - 특정 페이지 템플릿에서 미디어 버튼
+ * - 업로드 허용 파일타입 확장
+ */
+
+/* theme_plugins.php 불러오기 */
+require_once get_template_directory() . '/theme_plugins.php';
+
+/* CSS & JS 로드 */
 function melted_mint_enqueue_scripts() {
     wp_enqueue_style('melted-mint-style', get_stylesheet_uri());
     wp_enqueue_style('tailwind-css', get_template_directory_uri() . '/assets/css/output.css');
     wp_enqueue_script('startSetting', get_template_directory_uri() . '/assets/js/startSetting.js', [], '1.0', true);
 }
 add_action('wp_enqueue_scripts', 'melted_mint_enqueue_scripts');
-?>
 
-<?php
+/* 테마 메뉴 등록 */
 function melted_mint_setup() {
     register_nav_menus(array(
         'primary'   =>  __('Primary Menu', 'meltedmint'),
@@ -15,141 +33,55 @@ function melted_mint_setup() {
     ));
 }
 add_action('after_setup_theme', 'melted_mint_setup');
-?>
 
-<!-- For Unique URL -->
-
-
-<!-- external -->
-
-<?php
+/* external 메뉴 -> 새 탭으로 열기 */
 function external_menu_new_tab($atts, $item, $args) {
-    if ($args->theme_location == 'external') {
+    if ($args->theme_location === 'external') {
         $atts['target'] = '_blank';
     }
     return $atts;
 }
 add_filter('nav_menu_link_attributes', 'external_menu_new_tab', 10, 3);
-?>
 
-<!-- post pages! -->
-<?php
-function custom_posting_template($template) {
-    if (is_category('post')) { // Blog 카테고리 ID 확인
-        $custom_template = locate_template('page-post.php'); // page-blog.php 불러오기
-        if ($custom_template) {
-            return $custom_template;
-        }
-    }
-    return $template; // 기본 템플릿 유지
-}
-add_filter('category_template', 'custom_posting_template');
-?>
-
-<!-- edit pages! -->
-<?php
-function custom_edit_template($template) {
-    if (is_category('edit')) { // Blog 카테고리 ID 확인
-        $custom_template = locate_template('page-edit.php'); // page-blog.php 불러오기
-        if ($custom_template) {
-            return $custom_template;
-        }
-    }
-    return $template; // 기본 템플릿 유지
-} 
-?>
-
-<!-- view my pages! -->
-<?php
-
+/* "my-posts" 페이지 템플릿 교체 (page-my-posts.php) */
 function custom_view_my_posts_template($template) {
-    // is_page('my-posts') -> slug가 my-posts인지 확인
     if ( is_page('my-posts') ) {
-        // page-my-posts.php가 테마 안에 존재하는지 locate_template로 확인
         $custom_template = locate_template('page-my-posts.php');
         if ( $custom_template ) {
             return $custom_template;
         }
     }
-    // 아니면 기본 템플릿
     return $template;
 }
 add_filter('page_template', 'custom_view_my_posts_template');
-?>
 
-<!-- blogs -->
-<?php
-function custom_blog_category_template($template) {
-    if (is_category('blog')) { // Blog 카테고리 ID 확인
-        $custom_template = locate_template('page-blog.php'); // page-blog.php 불러오기
-        if ($custom_template) {
-            return $custom_template;
-        }
-    }
-    return $template; // 기본 템플릿 유지
-}
-add_filter('category_template', 'custom_blog_category_template');
-?>
-
-<!-- novels (Edit Nedded) -->
-<?php
-function custom_novel_category_template($template) {
-    if (is_category('novel')) { // Blog 카테고리 ID 확인
-        $custom_template = locate_template('page-blog.php'); // page-blog.php 불러오기
-        if ($custom_template) {
-            return $custom_template;
-        }
-    }
-    return $template; // 기본 템플릿 유지
-}
-add_filter('category_template', 'custom_novel_category_template');
-?>
-
-<!-- about -->
-<?php
-function custom_about_category_template($template) {
-    if (is_category('about')) { // Blog 카테고리 ID 확인
-        $custom_template = locate_template('page-about.php'); // page-blog.php 불러오기
-        if ($custom_template) {
-            return $custom_template;
-        }
-    }
-    return $template; // 기본 템플릿 유지
-}
-add_filter('category_template', 'custom_about_category_template');
-?>
-
-<!-- sidebar -->
-<?php
+/* 사이드바 등록 */
 function custom_sidebars() {
     register_sidebar(array(
-        'name' => 'Left Sidebar',
-        'id' => 'left-sidebar',
-        'description' => '좌측 Sidebar (Blog 전용)',
+        'name'          => 'Left Sidebar',
+        'id'            => 'left-sidebar',
+        'description'   => '좌측 Sidebar (Blog 전용)',
         'before_widget' => '<div class="widget p-4 mb-4 bg-base-100 shadow-md rounded-lg">',
-        'after_widget' => '</div>',
-        'before_title' => '<h2 class="text-lg font-bold mb-2">',
-        'after_title' => '</h2>',
+        'after_widget'  => '</div>',
+        'before_title'  => '<h2 class="text-lg font-bold mb-2">',
+        'after_title'   => '</h2>',
     ));
 
     register_sidebar(array(
-        'name' => 'Right Sidebar',
-        'id' => 'right-sidebar',
-        'description' => '우측 Sidebar (Blog 전용)',
+        'name'          => 'Right Sidebar',
+        'id'            => 'right-sidebar',
+        'description'   => '우측 Sidebar (Blog 전용)',
         'before_widget' => '<div class="widget p-4 mb-4 bg-base-100 shadow-md rounded-lg">',
-        'after_widget' => '</div>',
-        'before_title' => '<h2 class="text-lg font-bold mb-2">',
-        'after_title' => '</h2>',
+        'after_widget'  => '</div>',
+        'before_title'  => '<h2 class="text-lg font-bold mb-2">',
+        'after_title'   => '</h2>',
     ));
 }
 add_action('widgets_init', 'custom_sidebars');
-?>
 
-<!-- login -->
-<?php
+/* 로그인 쿠키 강제 삭제 */
 function force_logout_fix() {
-    if (!is_user_logged_in() && isset($_COOKIE['wordpress_logged_in'])) {
-        // 모든 쿠키 삭제
+    if ( ! is_user_logged_in() && isset($_COOKIE['wordpress_logged_in']) ) {
         foreach ($_COOKIE as $cookie => $value) {
             setcookie($cookie, '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN);
             setcookie($cookie, '', time() - 3600, SITECOOKIEPATH, COOKIE_DOMAIN);
@@ -157,86 +89,26 @@ function force_logout_fix() {
     }
 }
 add_action('init', 'force_logout_fix');
-?>
 
-<!-- menu css -->
-<?php
+/* 메뉴 링크에 Tailwind 클래스 추가 */
 function add_menu_link_attributes($atts) {
-    // 각 네비게이션 메뉴에 특정 클래스를 추가
-    $atts['class'] = 'hoveronlyButton text-md'; // Tailwind 버튼 스타일 적용
+    $atts['class'] = 'hoveronlyButton text-md'; 
     return $atts;
 }
 add_filter('nav_menu_link_attributes', 'add_menu_link_attributes', 10, 4);
-?>
 
-<!-- Ajax Form -->
-<?php
-/**
- * SunEditor 이미지 업로드 처리
- */
-function melted_mint_suneditor_image_upload() {
-    // 1) 로그인·권한 체크 (예: Editor 이상만 가능)
-    if ( ! is_user_logged_in() ) {
-        // JSON 형태로 에러 반환
-        wp_send_json_error( array( 'message' => '로그인이 필요합니다.' ) );
-    }
-
-    // 2) 실제 업로드할 파일이 있는지 확인
-    if ( empty( $_FILES['file'] ) ) {
-        wp_send_json_error( array( 'message' => '업로드할 파일이 없습니다.' ) );
-    }
-
-    // 3) 워드프레스 업로드 처리
-    //   (test_form=false 로 설정하면, $_POST 검증을 건너뜀)
-    $upload = wp_handle_upload( $_FILES['file'], array( 'test_form' => false ) );
-    if ( isset( $upload['error'] ) ) {
-        // 업로드 실패
-        wp_send_json_error( array( 'message' => $upload['error'] ) );
-    }
-
-    // 4) 업로드 성공 -> SunEditor가 요구하는 형식으로 응답
-    // SunEditor 문서(File Upload) 기준, 예:
-    // {
-    //   "errorMessage": "",
-    //   "result": [ { "url": "업로드된파일URL" } ]
-    // }
-    $uploaded_url = $upload['url'];
-
-    // SunEditor에 반환할 데이터
-    $response = array(
-        'errorMessage' => '',
-        'result'       => array(
-            array( 'url' => $uploaded_url )
-        )
-    );
-
-    // 5) JSON 성공 응답
-    wp_send_json_success( $response );
-}
-
-// AJAX 액션 등록 (로그인 사용자 + 비로그인 사용자 둘 다 허용 시 nopriv도 추가)
-add_action( 'wp_ajax_my_suneditor_image_upload', 'melted_mint_suneditor_image_upload' );
-add_action( 'wp_ajax_nopriv_my_suneditor_image_upload', 'melted_mint_suneditor_image_upload' );
-?>
-<!-- media add button -->
-<?php
-// functions.php
-
+/* 특정 페이지 템플릿에서 미디어 버튼 로드 */
 function melted_mint_enqueue_frontend_editor_scripts() {
-    // 예: 특정 페이지 템플릿에서만 로드
     if ( is_page_template('template-front-editor.php') ) {
         wp_enqueue_media(); 
-        // "Add Media" 버튼에 필요한 JS/CSS (이미지/파일 업로드)
     }
 }
 add_action('wp_enqueue_scripts', 'melted_mint_enqueue_frontend_editor_scripts');
-?>
 
-<!-- media... -->
-<?php
+/* 업로드 허용 파일타입 확장 */
 function allow_custom_file_types($mime_types) {
-    $mime_types['png'] = 'image/png'; // Example for SVG files
+    // 예: PNG 허용, SVG 허용 등
+    $mime_types['png'] = 'image/png';
     return $mime_types;
 }
 add_filter('upload_mimes', 'allow_custom_file_types');
-?>

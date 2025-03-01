@@ -1,7 +1,10 @@
 <?php
 /**
- * category-13.php
- * 카테고리 ID=13 전용 템플릿
+ * page-blog.php
+ * 
+ * - Blog 커스텀 포스트 타입을 10개씩 불러오고
+ * - loop.php(templates/blog/loop.php)로 출력
+ * - custom_two_skip_pagination() 함수로 페이지네이션
  */
 
 // ------------------------------
@@ -9,7 +12,6 @@
 // ------------------------------
 if ( ! function_exists('custom_two_skip_pagination') ) {
     function custom_two_skip_pagination($wp_query = null) {
-        // $wp_query가 없으면 전역 $wp_query 사용
         if (null === $wp_query) {
             global $wp_query;
         }
@@ -17,17 +19,15 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
         $paged       = max(1, get_query_var('paged'));
         $total_pages = $wp_query->max_num_pages;
 
-        // 페이지가 없는 경우에는 표시할 필요가 없으므로 종료
         if ($total_pages < 1) {
             return;
         }
 
-        // 버튼 스타일 (Tailwind + DaisyUI 예시)
+        // Tailwind + DaisyUI 버튼 클래스
         $btn_base_class     = "btn btn-square availableButton w-8 h-8 sm:w-9.5 sm:h-9.5 md:w-11 md:h-11 text-xl sm:text-2xl md:text-3xl text-neutral-content border-none buttonComponent flex items-center justify-center";
         $btn_active_class   = "btn btn-square activatedButton w-8 h-8 sm:w-9.5 sm:h-9.5 md:w-11 md:h-11 text-xl sm:text-2xl md:text-3xl text-primary-content border-none flex items-center justify-center buttonComponent";
         $btn_disabled_class = "btn btn-square btn-disabled disabledButton w-8 h-8 sm:w-9.5 sm:h-9.5 text-xl md:w-11 md:h-11 md:text-3xl text-neutral-content border-none opacity-50 cursor-not-allowed flex items-center justify-center";
 
-        // 페이지네이션 컨테이너 (화살표 + 페이지 번호)
         echo '<div class="flex items-center justify-center my-4">';
 
         // << (5페이지 뒤로)
@@ -46,17 +46,11 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
             echo '<span class="' . $btn_disabled_class . '">&lsaquo;</span>';
         }
 
-        // ------------------------------
-        // 페이지 번호 표시 로직
-        // ------------------------------
-        // - 5페이지 이하인 경우: 전체 페이지(1~total_pages) 모두 출력
-        // - 5페이지 초과인 경우: 처음/끝/현재 주변만 출력하고, 나머지는 '...'로 축약
-
-        // 표시 범위(현재 페이지 기준 좌우로 몇 개씩)
+        // 표시 범위(현재 페이지 주변 몇 개씩)
         $range = 2;
 
         if ($total_pages <= 5) {
-            // 5페이지 이하 => 모든 페이지 번호 노출
+            // 5페이지 이하 => 전체 페이지 표시
             for ($i = 1; $i <= $total_pages; $i++) {
                 if ($i == $paged) {
                     echo '<span class="' . $btn_active_class . '">' . $i . '</span>';
@@ -66,23 +60,20 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
             }
         } else {
             // 5페이지 초과 => 처음/끝/현재 주변만 표시
-            // 1) 항상 페이지 1 표시
+            // 첫 페이지
             if ($paged == 1) {
                 echo '<span class="' . $btn_active_class . '">1</span>';
             } else {
                 echo '<a href="' . esc_url(get_pagenum_link(1)) . '" class="' . $btn_base_class . '">1</a>';
             }
 
-            // 2) 현재 페이지 기준 범위 계산
             $start = max(2, $paged - $range);
             $end   = min($total_pages - 1, $paged + $range);
 
-            // 3) 만약 시작 번호가 2보다 크면 => '...' 표시
             if ($start > 2) {
                 echo '<span class="' . $btn_disabled_class . '">...</span>';
             }
 
-            // 4) 현재 페이지 주변 번호 출력
             for ($i = $start; $i <= $end; $i++) {
                 if ($i == $paged) {
                     echo '<span class="' . $btn_active_class . '">' . $i . '</span>';
@@ -91,12 +82,11 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
                 }
             }
 
-            // 5) end가 마지막 페이지 직전보다 작으면 => '...' 표시
             if ($end < $total_pages - 1) {
                 echo '<span class="' . $btn_disabled_class . '">...</span>';
             }
 
-            // 6) 항상 마지막 페이지 표시(단, total_pages > 1인 경우)
+            // 마지막 페이지
             if ($paged == $total_pages) {
                 echo '<span class="' . $btn_active_class . '">' . $total_pages . '</span>';
             } else {
@@ -120,13 +110,9 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
             echo '<span class="' . $btn_disabled_class . '">&raquo;</span>';
         }
 
-        echo '</div>'; // .flex
+        echo '</div>';
 
-        // ------------------------------
-        // 페이지 직접 입력 폼
-        // ------------------------------
-        // - GET 파라미터 paged 로 이동 (Plain 퍼머링크 기준)
-        // - 예쁜(permalink) 구조를 쓰신다면 별도 처리 필요
+        // 페이지 직접 입력 폼 (선택 사항)
         echo '<div class="flex items-center justify-center my-4">';
         echo '<form action="" method="GET" class="flex items-center gap-2">';
         echo '<label for="paged" class="whitespace-nowrap text-sm sm:text-lg md:text-xl">Go to page >> </label>';
@@ -138,21 +124,24 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
 }
 
 // ------------------------------
-// 2) 카테고리 13 글 쿼리 설정
+// 2) Blog CPT 쿼리 설정
 // ------------------------------
 $paged = max(1, get_query_var('paged'));
-query_posts(array(
-    'cat'            => 'blog',      // 카테고리 ID
-    'posts_per_page' => 10,      // 한 페이지에 10개
-    'orderby'        => 'date',  // 날짜 기준
-    'order'          => 'DESC',  // 최신글 순
+$blog_args = array(
+    'post_type'      => 'blog',  // 커스텀 포스트 타입
+    'posts_per_page' => 10,
+    'orderby'        => 'date',
+    'order'          => 'DESC',
     'paged'          => $paged,
-));
+);
+
+$blog_query = new WP_Query($blog_args);
 ?>
 
 <!-- 레이아웃 시작 -->
 <div class="grid grid-cols-1 lg:grid-cols-[17.5rem_1fr] gap-4 py-4 max-w-[80rem] mx-auto sm:px-4 items-start">
-    <!-- 사이드바 -->
+
+    <!-- 사이드바 (카테고리/태그) -->
     <aside class="order-last lg:order-none lg:sticky lg:top-12 self-start">
         <div class="flex flex-col">
             <div class="flex cardComponent rounded-xl px-2 py-2 mb-4">
@@ -164,14 +153,30 @@ query_posts(array(
         </div>
     </aside>
 
-    <!-- 메인 -->
+    <!-- 메인 영역 -->
     <main class="order-first lg:order-none rounded-xl">
-        <?php get_template_part('templates/blog/loop'); ?>
-        <?php custom_two_skip_pagination(); ?>
+        <?php
+        if ( $blog_query->have_posts() ) {
+            // 1) 전역 $wp_query 백업
+            global $wp_query;
+            $temp_wp_query = $wp_query;
+
+            // 2) 전역을 $blog_query로 교체
+            $wp_query = $blog_query;
+
+            // 3) loop.php 불러오기
+            //    (여기서 have_posts(), the_post()를 사용할 수 있음)
+            get_template_part('templates/blog/loop');
+
+            // 4) 페이지네이션
+            custom_two_skip_pagination($blog_query);
+
+            // 5) 복원 + reset
+            $wp_query = $temp_wp_query;
+            wp_reset_postdata();
+        } else {
+            echo '<p class="text-center p-4">No blog posts found.</p>';
+        }
+        ?>
     </main>
 </div>
-
-<?php
-// 쿼리 리셋
-wp_reset_query();
-?>

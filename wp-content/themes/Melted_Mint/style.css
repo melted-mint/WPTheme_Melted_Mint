@@ -214,6 +214,10 @@ body {
     background-color: var(--button-bg-color);
 }
 
+.scrollButton:hover {
+    opacity: 0.6;
+}
+
 .dropdown-content {
     background-color: var(--card-bg-color);
 }
