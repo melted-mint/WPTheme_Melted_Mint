@@ -1,0 +1,278 @@
+/*
+Theme Name: Melted_Mint
+Theme URI: IDK
+Author: Melted_Mint
+Author URI: https://meltedmint.com
+Description: A Template For Me.
+Version: 1.0.0
+License: MIT
+License URI: https://mit-license.org/
+Text Domain: meltedmint
+*/
+/* go to output.css!! */
+
+:root {
+    --hue: 165;
+    --chroma: 0.01;
+    --lightness: 0.9;
+    --color: black;
+}
+
+html,
+body {
+    width: 100vw;
+    min-height: 100vh;
+    background-color: oklch(var(--lightness) var(--chroma) var(--hue));
+    color: var(--color);
+}
+
+/* light mode */
+
+[data-theme="light"] {
+    --hue: 165;
+    --chroma: 0.01;
+    --lightness: 0.9;
+    --color: black;
+    --card-bg-color: rgb(255, 255, 255);
+    --button-color: oklch(0.6 .1 var(--hue));
+    --button-bg-color: oklch(.95 .05 var(--hue));
+    font-weight: 500;
+}
+
+[data-theme="light"] .btn:hover {
+    color: oklch(0.7 0.14 var(--hue));
+    background-color: oklch(0.9 0.05 var(--hue));
+}
+
+[data-theme="light"] .cardComponent{
+    border: 1px solid oklch(0.9 0.14 var(--hue));
+}
+
+[data-theme="light"] .dropdown-content{
+    border: 1px solid oklch(0.9 0.14 var(--hue));
+}
+
+[data-theme="light"] .hoveronlyButton:hover {
+    color: oklch(0.7 0.14 var(--hue));
+    background-color: oklch(0.9 0.05 var(--hue));
+    transition: background-color 0.1s ease-in-out;
+    transition: color 0.1s ease-in-out;
+}
+
+[data-theme="light"] .hoveronlyText:hover {
+    color: oklch(0.7 0.14 var(--hue));
+    transition: color 0.1s ease-in-out;
+}
+
+[data-theme="light"] .activatedButton {
+    color: oklch(0.4 0.03 var(--hue));
+    background-color: oklch(0.65 0.09 var(--hue));
+}
+
+[data-theme="light"] .activatedButton:hover {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.4 0.15 var(--hue));
+}
+
+[data-theme="light"] .disabledButton {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.13 0.15 var(--hue));
+}
+
+[data-theme="light"] .availableButton {
+    color: oklch(0.4 0.03 var(--hue));
+    background-color: oklch(0.4 0.15 var(--hue));
+}
+
+[data-theme="light"] .availableButton:hover {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.4 0.15 var(--hue));
+}
+
+[data-theme="light"] .tagButton {
+    color: oklch(0.1 0.03 var(--hue));
+    background-color: oklch(0.9 0.06 var(--hue));
+}
+
+[data-theme="light"] .tagButton:hover {
+    color: oklch(0.1 0.03 var(--hue));
+    background-color: oklch(0.65 0.1 var(--hue));
+}
+
+[data-theme="light"] .grayTextThings {
+    color: #505050;
+}
+
+/* dark mode */
+
+[data-theme="dark"] {
+    --hue: 165;
+    --chroma: 0.014;
+    --lightness: 0.16;
+    --color: white;
+    --card-bg-color: oklch(.23 .02 var(--hue));
+    --button-color: oklch(0.75 .1 var(--hue));
+    --button-bg-color: oklch(.33 .035 var(--hue));
+    font-weight: 500;
+}
+
+[data-theme="dark"] .btn:hover {
+    color: oklch(0.75 0.14 var(--hue));
+    background-color: oklch(0.3 0.03 var(--hue));
+}
+
+[data-theme="dark"] .cardComponent{
+    border: 1px solid oklch(0.4 0.14 var(--hue));
+}
+
+[data-theme="dark"] .dropdown-content{
+    border: 1px solid oklch(0.4 0.14 var(--hue));
+}
+
+[data-theme="dark"] .hoveronlyButton:hover {
+    color: oklch(0.75 0.14 var(--hue));
+    background-color: oklch(0.3 0.03 var(--hue));
+    transition: background-color 0.1s ease-in-out;
+}
+
+[data-theme="dark"] .hoveronlyText:hover {
+    color: oklch(0.75 0.14 var(--hue));
+    transition: color 0.1s ease-in-out;
+}
+
+[data-theme="dark"] .activatedButton {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.7 0.13 var(--hue));
+}
+
+[data-theme="dark"] .activatedButton:hover {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.7 0.15 var(--hue));
+}
+
+[data-theme="dark"] .disabledButton {
+    color: oklch(0.95 0.03 var(--hue));
+    background-color: oklch(0.25 0.05 var(--hue));
+}
+
+[data-theme="dark"] .availableButton {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.35 0.13 var(--hue));
+}
+
+[data-theme="dark"] .availableButton:hover {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.7 0.15 var(--hue));
+}
+
+[data-theme="dark"] .tagButton {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.33 0.06 var(--hue));
+}
+
+[data-theme="dark"] .tagButton:hover {
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.6 0.1 var(--hue));
+}
+
+/* custom styles */
+
+.menu-horizontal li a {
+    @apply transition-colors duration-200 ease-in-out rounded-md px-3 py-2;
+}
+
+[data-theme="light"] .menu-horizontal li a:hover {
+    color: oklch(0.7 0.14 var(--hue));
+    background-color: oklch(0.9 0.05 var(--hue));
+}
+
+[data-theme="dark"] .menu-horizontal li a:hover {
+    color: oklch(0.75 0.14 var(--hue));
+    background-color: oklch(0.3 0.03 var(--hue));
+}
+
+/* made by me */
+
+.specialButton {
+    color: oklch(0.75 0.14 var(--hue));
+}
+
+.cardComponent {
+    background-color: var(--card-bg-color);
+    border: 1px solid oklch(0.3 0.14 var(--hue));
+}
+
+.smallBoxComponent {
+    background-color: oklch(0.7 0.14 var(--hue));
+}
+
+.buttonComponent {
+    color: var(--button-color);
+    background-color: var(--button-bg-color);
+}
+
+.scrollButton:hover {
+    opacity: 0.6;
+}
+
+.dropdown-content {
+    background-color: var(--card-bg-color);
+}
+
+.counterButton {
+    color: oklch(0.25 0.02 var(--hue));
+    background-color: oklch(0.75 0.14 var(--hue));
+}
+
+/* input Default button remove */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+/* Hue Slider */
+
+.hue-slider {
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  border-radius: 5px;
+  background: linear-gradient(
+    to right,
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(360, 100%, 50%)
+  );
+  cursor: pointer;
+  outline: none;
+  border: none;
+}
+
+/* 슬라이더 썸네일 (커스텀 스타일) */
+.hue-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 20px;
+  border-radius: 25%;
+  background: white;
+  border: 2px solid black;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.hue-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* style.css 등 */
+.comment-list ul.children {
+  display: none; /* 기본 숨김 */
+  margin-left: 1.5rem; /* 들여쓰기 (필요시) */
+  border-left: 2px solid #ddd; /* 세로줄 느낌 */
+  padding-left: 1rem;
+}
