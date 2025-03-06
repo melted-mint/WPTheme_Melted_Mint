@@ -24,26 +24,27 @@ $allowed_pages = array(
     'community' => true
 );
 
-// (3) 카테고리 맵
+// (3) 카테고리 맵 (id 대신 slug 사용)
 $page_category_map = array(
-    'blog'      => array(8, 9, 10, 11, 12),
-    'novel'     => array(38, 18),
-    'spinoff'   => array(20),
-    'community' => array(9, 10, 11, 12, 34)
+    'blog'      => array('life', 'game', 'music', 'study', 'beselig'),
+    'novel'     => array('마법사-시작합니다', '마법전자세계'),
+    'spinoff'   => array('너만의-마법서'),
+    'community' => array('community')
 );
 $page_category_detailed = array();
-foreach ($page_category_map as $page_slug => $cat_ids) {
+foreach ($page_category_map as $page_slug => $cat_slugs) {
     $page_category_detailed[$page_slug] = array();
-    foreach ($cat_ids as $cid) {
-        $term = get_category($cid);
+    foreach ($cat_slugs as $cat_slug) {
+        // get_category_by_slug()를 이용하여 슬러그로 카테고리 객체를 가져옵니다.
+        $term = get_category_by_slug($cat_slug);
         $page_category_detailed[$page_slug][] = array(
-            'id'   => $cid,
-            'name' => ($term && ! is_wp_error($term)) ? $term->name : $cid
+            'slug' => $cat_slug,
+            'name' => ($term && ! is_wp_error($term)) ? $term->name : $cat_slug
         );
     }
 }
 
-// (4) 모든 태그
+// (4) 모든 태그 (태그도 슬러그 정보를 포함하므로 이후 출력 시 활용)
 $all_tags = get_tags(array('hide_empty' => false));
 
 get_header();
@@ -71,7 +72,7 @@ get_header();
         <input type="file" name="thumbnail" id="thumbnailInput" accept="image/*" style="display:none;">
         <!-- 커스텀 버튼 -->
         <button type="button" id="customThumbnailButton" class="p-2 border hoveronlyButton rounded-md">
-        대표이미지 선택
+            대표이미지 선택
         </button>
         <!-- 선택된 파일명 표시 영역 -->
         <span id="fileNameDisplay" class="ml-2"></span>
@@ -94,6 +95,7 @@ get_header();
         <!-- 5) 카테고리 -->
         <label class="block mt-4 mb-2 font-semibold">카테고리 선택 (하나만)</label>
         <div id="category-buttons" class="flex flex-wrap gap-2"></div>
+        <!-- 선택된 카테고리의 slug가 저장됩니다. -->
         <input type="hidden" name="selected_category" id="selected_category" required>
 
         <!-- 6) 태그 -->
@@ -101,7 +103,7 @@ get_header();
         <div id="tag-buttons" class="flex flex-wrap gap-2">
             <?php foreach($all_tags as $tag): ?>
                 <button type="button" class="hoveronlyButton tag-btn px-3 py-1 border rounded-md"
-                        data-tag="<?php echo esc_attr($tag->name); ?>">
+                        data-tag="<?php echo esc_attr($tag->slug); ?>">
                     <?php echo esc_html($tag->name); ?>
                 </button>
             <?php endforeach; ?>
@@ -116,10 +118,9 @@ get_header();
 
         <!-- 7) 본문 (Summernote) -->
         <label class="block mt-4 mb-2 font-semibold">내용</label>
-        <!-- 중첩 form 제거 후 textarea 사용 -->
         <textarea id="summernote" name="post_content"></textarea>
 
-        <!-- 한마디글 (Novel/Spinoff 전용) - 기본 숨김 --> <!-- ← 추가 -->
+        <!-- 한마디글 (Novel/Spinoff 전용) - 기본 숨김 -->
         <div id="one-liner-container" class="mb-4" style="display:none;">
             <label class="block mb-1 font-semibold">한마디글</label>
             <input type="text" name="one_liner_value" id="one_liner_value"
@@ -133,7 +134,6 @@ get_header();
             <button type="button" class="hoveronlyButton publish-option-btn px-4 py-2 border rounded-md" data-option="immediate">즉시</button>
             <button type="button" class="hoveronlyButton publish-option-btn px-4 py-2 border rounded-md" data-option="schedule">예약</button>
         </div>
-        <!-- 숨겨진 input에 선택 값 저장 -->
         <input type="hidden" name="publish_option" id="publish_option" value="immediate">
 
         <!-- 예약 날짜/시간 입력 (예약 선택 시 보임) -->
@@ -156,7 +156,7 @@ get_header();
                 </div>
             </div>
             <div>
-                <!-- (C) 비밀글: 커스텀 토글 -->
+                <!-- 비밀글: 커스텀 토글 -->
                 <label class="block mb-2 font-semibold">비밀글 여부</label>
                 <div id="private-post-toggle" class="hoveronlyButton p-2 border rounded-md inline-block cursor-pointer">
                     공개글
@@ -166,17 +166,14 @@ get_header();
         </div>
         <input type="hidden" name="comment_status" id="comment_status" value="open">
 
-
         <!-- 라이선스 선택 -->
         <label class="block mt-4 mb-2 font-semibold">라이선스 선택</label>
         <div id="license-main-buttons" class="flex space-x-4 mb-2">
-            <!-- 메인 버튼: CC -->
             <button type="button" 
                     class="hoveronlyButton license-main-btn px-4 py-2 border rounded-md"
                     data-option="cc">
                 CC
             </button>
-            <!-- 메인 버튼: 이외(기타) -->
             <button type="button" 
                     class="hoveronlyButton license-main-btn px-4 py-2 border rounded-md"
                     data-option="other">
@@ -188,7 +185,6 @@ get_header();
         <div id="cc-suboptions" class="mb-4" style="display:none;">
             <label class="block mb-1 font-semibold">출처 범위(기본은 CC0)</label>
             <div class="flex flex-wrap gap-2">
-                <!-- 각각 클릭 시 토글 -->
                 <button type="button" class="hoveronlyButton cc-sub-btn px-3 py-1 border rounded-md" data-value="0">0</button>
                 <button type="button" class="hoveronlyButton cc-sub-btn px-3 py-1 border rounded-md" data-value="BY">BY</button>
                 <button type="button" class="hoveronlyButton cc-sub-btn px-3 py-1 border rounded-md" data-value="NC">NC</button>
@@ -208,7 +204,7 @@ get_header();
         <!-- 최종 라이선스 값 저장용 (숨김) -->
         <input type="hidden" name="license_value" id="license_value" value="">
 
-        <!-- 8) 버튼들: 입력 완료, 임시저장, 취소 -->
+        <!-- 8) 버튼들 -->
         <div class="flex justify-end gap-3 mt-6">
             <button type="submit" name="submit_post "
                     class="p-3 availableButton hoveronlyButton text-white rounded-md">
@@ -256,20 +252,20 @@ document.querySelectorAll('.page-select-btn').forEach(btn => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'hoveronlyButton cat-btn px-3 py-1 border rounded-md';
-                btn.setAttribute('data-cat-id', item.id);
+                btn.setAttribute('data-cat-slug', item.slug);
                 btn.textContent = item.name;
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.cat-btn').forEach(b =>
                         b.classList.remove('activatedButton','text-white')
                     );
                     this.classList.add('activatedButton','text-white');
-                    document.getElementById('selected_category').value = this.getAttribute('data-cat-id');
+                    document.getElementById('selected_category').value = this.getAttribute('data-cat-slug');
                 });
                 catContainer.appendChild(btn);
             });
         }
 
-        // 2) Novel/Spinoff면 한마디글 표시, 아니면 숨김  ← 추가
+        // 2) Novel/Spinoff면 한마디글 표시
         const oneLinerContainer = document.getElementById('one-liner-container');
         if (selectedPage === 'novel' || selectedPage === 'spinoff') {
             oneLinerContainer.style.display = 'block';
@@ -279,37 +275,30 @@ document.querySelectorAll('.page-select-btn').forEach(btn => {
     });
 });
 
-// 5) 기본값들 초기 설정
+// 기본값들 초기 설정
 jQuery(document).ready(() => {
-    // (B) 예약 여부: 즉시
+    // 예약 여부 기본
     jQuery('#publish_option').val('immediate');
     jQuery('.publish-option-btn[data-option="immediate"]').addClass('activatedButton text-white');
     jQuery('#schedule-options').hide();
 
-    // (C) 댓글 설정: closed
+    // 댓글 설정 기본 "closed" (원하시는 값으로 조정)
     jQuery('#comment_status').val('closed');
     jQuery('.comment-status-btn[data-status="closed"]').addClass('activatedButton text-white');
 
-    // (D) 비밀글 여부: 공개글(0)
+    // 비밀글 여부 기본 0(공개)
     jQuery('#private_post').val('0');
-    // "공개글" UI 이미 표시 상태
 
-    // (E) 라이선스 기본 CC BY-NC-ND
-    // 1) CC 메인버튼 활성화
+    // 라이선스 기본 CC BY-NC-ND 예시
     jQuery('.license-main-btn[data-option="cc"]').addClass('activatedButton text-white');
-    // 2) CC 서브옵션 패널 보이기
     jQuery('#cc-suboptions').show();
     jQuery('#other-license-container').hide();
 
-    // 3) 기본 ccSelected = ['BY','NC','ND']
-    // → UI 표시 & license_value = "CC BY-NC-ND"
+    // 기본 CC 서브옵션: BY, NC, ND
     const ccSelected = ['BY','NC','ND'];
-
-    // 각각 버튼 찾아서 활성화
     ccSelected.forEach(val => {
         jQuery(`.cc-sub-btn[data-value="${val}"]`).addClass('activatedButton text-white');
     });
-    // 실제 값
     jQuery('#license_value').val('CC ' + ccSelected.join('-'));
 });
 
@@ -384,144 +373,7 @@ document.getElementById('new_tag_input').addEventListener('keydown', function(e)
     }
 });
 
-// (E) 예약 vs 즉시 옵션 (미해결)
-document.querySelectorAll('input[name="publish_option"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-        if (this.value === 'schedule') {
-            document.getElementById('schedule-options').style.display = 'block';
-        } else {
-            document.getElementById('schedule-options').style.display = 'none';
-        }
-    });
-});
-
-// (F) Summernote 초기화
-jQuery(document).ready(() => {
-    jQuery('#summernote').summernote({
-        height: 200,
-        lang: "ko-KR",
-        focus: false,
-        placeholder: '여기에 글을 쓰시면 돼요.',
-        toolbar: [
-            ['style', ['style']],
-            ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
-            ['fontname', ['fontname']],
-            ['fontsize', ['fontsize']],
-            ['color', ['color']],
-            ['para', ['ul', 'ol', 'paragraph']],
-            ['table', ['table']],
-            ['insert', ['link', 'picture', 'video']],
-            ['view', ['fullscreen', 'codeview', 'help']]
-        ],
-        fontNames: [
-            'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New',
-            '맑은 고딕', '궁서', '굴림체', '굴림', '돋움체', '바탕체'
-        ],
-        fontNamesIgnoreCheck: [
-            '맑은 고딕', '궁서', '굴림체', '굴림', '돋움체', '바탕체'
-        ],
-        callbacks: {
-            onInit: function() {
-                // (예시) 배경/글자색 간단 설정
-                jQuery('.note-editable').css({
-                    'background-color': '#dddddd',
-                    'color': 'black'
-                });
-            }
-        }
-    });
-});
-
-// (G) AJAX를 이용한 폼 제출 처리
-jQuery(document).ready(() => {
-    let isSubmitted = false; 
-
-    jQuery('#postForm').on('submit', (e) => {
-        e.preventDefault();
-
-        // 1) 필수 항목 검증 (제목, 페이지 선택, 카테고리, 내용)
-        const title = jQuery('input[name="post_title"]').val().trim();
-        const postPage = jQuery('#selected_page').val().trim();
-        const category = jQuery('#selected_category').val().trim();
-        let content = jQuery('#summernote').summernote('code').trim();
-        if (content === '<p><br></p>') {
-            content = '';
-        }
-
-        if (!title) {
-            alert('제목을 입력해 주세요.');
-            return false;
-        }
-        if (!postPage) {
-            alert('게시할 페이지를 선택해 주세요.');
-            return false;
-        }
-        if (!category) {
-            alert('카테고리를 선택해 주세요.');
-            return false;
-        }
-        if (!content) {
-            alert('내용을 입력해 주세요.');
-            return false;
-        }
-
-        // 1-2) 라이선스 필수 검사  ← 추가
-        const licenseVal = jQuery('#license_value').val().trim();
-        if (!licenseVal) {
-            alert('라이선스를 선택(또는 입력)해 주세요.');
-            return false;
-        }
-
-        // 2) 중복 제출 방지
-        if (isSubmitted) return;
-        isSubmitted = true;
-
-        // 3) FormData 생성
-        const formData = new FormData(e.currentTarget);
-        formData.append('action', 'submit_post_ajax');
-
-        // 4) 예약 옵션이 'schedule'이면 예약 시간도 추가
-        const publishOption = jQuery('#publish_option').val();
-        if (publishOption === 'schedule') {
-            const scheduledTime = jQuery('input[name="scheduled_time"]').val().trim();
-            if (!scheduledTime) {
-                alert('예약 날짜/시간을 입력해 주세요.');
-                isSubmitted = false;
-                return false;
-            }
-            formData.append('scheduled_time', scheduledTime);
-        }
-
-        // 5) Ajax 요청
-        jQuery.ajax({
-            url: "<?php echo admin_url('admin-ajax.php'); ?>",
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: (response) => {
-                if (response.success) {
-                    if (response.data.scheduled) {
-                        alert('글 게시가 예약되었습니다!'); 
-                    } else {
-                        alert('글을 올렸습니다!'); 
-                    }
-                    const pageSlug = jQuery('#selected_page').val();
-                    window.location.href = '/' + pageSlug + '/?success=1';
-                } else {
-                    alert('오류: ' + response.data);
-                    isSubmitted = false;
-                }
-            },
-            error: () => {
-                alert('글 등록 중 AJAX 오류가 발생했습니다.');
-                isSubmitted = false;
-            }
-        });
-    });
-});
-
-// (A) 커스텀 올리기 종류 버튼 동작
+// (A) 예약 vs 즉시 옵션
 jQuery(document).ready(() => {
     jQuery('#publish-option-buttons .publish-option-btn').on('click', (e) => {
          jQuery('#publish-option-buttons .publish-option-btn').removeClass('activatedButton text-white');
@@ -536,10 +388,9 @@ jQuery(document).ready(() => {
     });
 });
 
-// (B) 커스텀 비밀글 토글 동작
+// (B) 비밀글 토글
 jQuery(document).ready(() => {
     jQuery('#private-post-toggle').on('click', () => {
-        // 현재 값이 0이면 1로, 1이면 0으로 토글
         const currentVal = jQuery('#private_post').val();
         if (currentVal === '0') {
             jQuery('#private_post').val('1');
@@ -552,7 +403,8 @@ jQuery(document).ready(() => {
         }
     });
 });
-// 댓글 활성화 여부
+
+// (C) 댓글 설정
 jQuery(document).ready(() => {
     jQuery('#comment-status-buttons .comment-status-btn').on('click', (e) => {
         jQuery('#comment-status-buttons .comment-status-btn').removeClass('activatedButton text-white');
@@ -560,7 +412,8 @@ jQuery(document).ready(() => {
         jQuery('#comment_status').val(jQuery(e.currentTarget).attr('data-status'));
     });
 });
-// 라이센스
+
+// (D) 라이센스
 jQuery(document).ready(() => {
     const mainBtns = jQuery('.license-main-btn'); 
     const ccSuboptions = jQuery('#cc-suboptions');
@@ -571,38 +424,33 @@ jQuery(document).ready(() => {
     let licenseMode = '';
     let ccSelected = [];
 
-    // **기본 라이선스 = CC BY-NC-ND**  ← 추가
-    // 즉, CC 모드로 시작 + ccSelected = ['BY','NC','ND']
+    // 초기 기본 설정
     licenseMode = 'cc';
     ccSelected = ['BY','NC','ND'];
-    // UI 초기 표시
-    ccSuboptions.style.display = 'block'; 
-    otherLicenseContainer.style.display = 'none';
-    updateCCLicenseValue();
-    updateCCButtonStyles();
-    // 메인 버튼: CC를 활성화 스타일
+    ccSuboptions.show();
+    otherLicenseContainer.hide();
+    licenseValueInput.val('CC ' + ccSelected.join('-'));
     jQuery('.license-main-btn[data-option="cc"]').addClass('activatedButton text-white');
+    ccSelected.forEach(val => {
+        jQuery(`.cc-sub-btn[data-value="${val}"]`).addClass('activatedButton text-white');
+    });
 
-    // 메인 버튼 클릭
+    // 메인 버튼
     mainBtns.on('click', function() {
         mainBtns.removeClass('activatedButton text-white');
         jQuery(this).addClass('activatedButton text-white');
 
         licenseMode = jQuery(this).attr('data-option');
         if (licenseMode === 'cc') {
-            ccSuboptions.style.display = 'block';
-            otherLicenseContainer.style.display = 'none';
+            ccSuboptions.show();
+            otherLicenseContainer.hide();
             otherLicenseInput.val('');
-            // 만약 기본값을 유지하려면 ccSelected를 그대로 둘 수도,
-            // 혹은 초기화하려면 ccSelected = [];
-            // 여기서는 "버튼 다시 누르면 초기화"로 가정:
-            ccSelected = ['BY','NC','ND']; 
+            ccSelected = ['BY','NC','ND'];
             updateCCLicenseValue();
             updateCCButtonStyles();
         } else {
-            ccSuboptions.style.display = 'none';
-            otherLicenseContainer.style.display = 'block';
-            // CC 배열 비움
+            ccSuboptions.hide();
+            otherLicenseContainer.show();
             ccSelected = [];
             updateCCLicenseValue();
             updateCCButtonStyles();
@@ -610,15 +458,15 @@ jQuery(document).ready(() => {
         }
     });
 
-    // CC 하위 옵션 클릭
+    // CC 서브옵션
     jQuery('.cc-sub-btn').on('click', function() {
         const val = jQuery(this).attr('data-value');
+        // CC0 단독 선택 처리
         if (val === '0') {
-            // ccSelected = ['0']
             ccSelected = ['0'];
         } else {
             ccSelected = ccSelected.filter(item => item !== '0');
-            // ND와 SA 동시 불가
+            // ND와 SA 동시 불가 예시
             if (val === 'ND' && ccSelected.includes('SA')) {
                 ccSelected = ccSelected.filter(item => item !== 'SA');
             }
@@ -662,6 +510,126 @@ jQuery(document).ready(() => {
     otherLicenseInput.on('input', function() {
         if (licenseMode === 'other') {
             licenseValueInput.val(jQuery(this).val().trim());
+        }
+    });
+});
+
+// (E) 폼 제출 (AJAX)
+jQuery(document).ready(() => {
+    let isSubmitted = false; 
+
+    jQuery('#postForm').on('submit', (e) => {
+        e.preventDefault();
+
+        // 필수 항목 검증
+        const title = jQuery('input[name="post_title"]').val().trim();
+        const postPage = jQuery('#selected_page').val().trim();
+        const category = jQuery('#selected_category').val().trim();
+        let content = jQuery('#summernote').summernote('code').trim();
+        if (content === '<p><br></p>') content = '';
+
+        if (!title) {
+            alert('제목을 입력해 주세요.');
+            return false;
+        }
+        if (!postPage) {
+            alert('게시할 페이지를 선택해 주세요.');
+            return false;
+        }
+        if (!category) {
+            alert('카테고리를 선택해 주세요.');
+            return false;
+        }
+        if (!content) {
+            alert('내용을 입력해 주세요.');
+            return false;
+        }
+
+        const licenseVal = jQuery('#license_value').val().trim();
+        if (!licenseVal) {
+            alert('라이선스를 선택(또는 입력)해 주세요.');
+            return false;
+        }
+
+        if (isSubmitted) return;
+        isSubmitted = true;
+
+        const formData = new FormData(e.currentTarget);
+        formData.append('action', 'submit_post_ajax');
+
+        // 예약 옵션 체크
+        const publishOption = jQuery('#publish_option').val();
+        if (publishOption === 'schedule') {
+            const scheduledTime = jQuery('input[name="scheduled_time"]').val().trim();
+            if (!scheduledTime) {
+                alert('예약 날짜/시간을 입력해 주세요.');
+                isSubmitted = false;
+                return false;
+            }
+            formData.append('scheduled_time', scheduledTime);
+        }
+
+        // 실제 Ajax
+        jQuery.ajax({
+            url: "<?php echo admin_url('admin-ajax.php'); ?>",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: (response) => {
+                if (response.success) {
+                    if (response.data.scheduled) {
+                        alert('글 게시가 예약되었습니다!');
+                    } else {
+                        alert('글을 올렸습니다!');
+                    }
+                    const pageSlug = jQuery('#selected_page').val();
+                    window.location.href = '/' + pageSlug + '/?success=1';
+                } else {
+                    alert('오류: ' + response.data);
+                    isSubmitted = false;
+                }
+            },
+            error: () => {
+                alert('글 등록 중 AJAX 오류가 발생했습니다.');
+                isSubmitted = false;
+            }
+        });
+    });
+});
+
+// Summernote 초기화
+jQuery(document).ready(() => {
+    jQuery('#summernote').summernote({
+        height: 200,
+        lang: "ko-KR",  // ko-KR 스크립트가 로드되어 있어야 함
+        focus: false,
+        placeholder: '여기에 글을 쓰시면 돼요.',
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
+            ['fontname', ['fontname']],
+            ['fontsize', ['fontsize']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture', 'video']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ],
+        fontNames: [
+            'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New',
+            '맑은 고딕', '궁서', '굴림체', '굴림', '돋움체', '바탕체'
+        ],
+        fontNamesIgnoreCheck: [
+            '맑은 고딕', '궁서', '굴림체', '굴림', '돋움체', '바탕체'
+        ],
+        callbacks: {
+            onInit: function() {
+                jQuery('.note-editable').css({
+                    'background-color': '#dddddd',
+                    'color': 'black'
+                });
+            }
         }
     });
 });

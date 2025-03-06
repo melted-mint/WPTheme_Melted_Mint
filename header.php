@@ -187,20 +187,20 @@
                     </div>
                 </label>
 
-                <ul tabindex="0" class="menu menu-sm w-fit dropdown-content rounded-box z-[1] mt-4 p-2 shadows text-center">
+                <ul tabindex="0" class="menu menu-sm !w-[12rem] dropdown-content rounded-box z-[1] mt-4 p-2 shadows text-center">
                     <?php if ($is_logged_in): ?>
                         <!-- 로그인한 경우 -->
-                        <li class="text-lg w-fit sm:text-xl lg:text-2xl my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
-                        <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo site_url('/my-posts'); ?>">내가 쓴 글</a></li>
-                        <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(admin_url('profile.php')); ?>">사용자 설정</a></li>
+                        <li class="text-md sm:text-lg lg:text-xl my-0.5 mx-2"><?php echo esc_html($current_user->display_name); ?></li>
+                        <li class="my-0.5"><a class="hoveronlyButton text-sm sm:text-md lg:text-lg" href="<?php echo site_url('/my-posts'); ?>">내가 쓴 글</a></li>
+                        <li class="my-0.5"><a class="hoveronlyButton text-sm sm:text-md lg:text-lg" href="<?php echo esc_url(admin_url('profile.php')); ?>">사용자 설정</a></li>
                         <?php if ($is_admin): ?>
-                            <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(admin_url()); ?>">관리자 설정판</a></li>
+                            <li class="my-0.5"><a class="hoveronlyButton text-sm sm:text-md lg:text-lg" href="<?php echo esc_url(admin_url()); ?>">관리자 설정판</a></li>
                         <?php endif; ?>
-                        <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(wp_logout_url(home_url())); ?>">로그아웃</a></li>
+                        <li class="my-0.5"><a class="hoveronlyButton text-sm sm:text-md lg:text-lg" href="<?php echo esc_url(wp_logout_url(home_url())); ?>">로그아웃</a></li>
                     <?php else: ?>
                         <!-- 로그인하지 않은 경우 -->
                         <li class="text-lg min-w-30 my-0.5 mx-2">익명</li>
-                        <li class="my-0.5"><a class="hoveronlyButton text-md sm:text-lg lg:text-xl" href="<?php echo esc_url(wp_login_url()); ?>">로그인</a></li>
+                        <li class="my-0.5"><a class="hoveronlyButton text-sm sm:text-md lg:text-lg" href="<?php echo esc_url(wp_login_url()); ?>">로그인</a></li>
                     <?php endif; ?>
                 </ul>
             </div>

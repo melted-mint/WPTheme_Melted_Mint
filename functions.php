@@ -33,14 +33,17 @@ add_action('wp_enqueue_scripts', 'melted_mint_enqueue_scripts');
 
 /* jQuery, summernote */
 function my_enqueue_jquery_scripts() {
-    // 워드프레스 기본 jQuery를 로드
+    // 워드프레스 기본 jQuery 로드
     wp_enqueue_script('jquery');
-    // Summernote도 같이 등록 (CDN 예시)
+
+    // Summernote CSS/JS
     wp_enqueue_style('summernote-css', 'https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css', array(), '0.8.20');
     wp_enqueue_script('summernote-js', 'https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js', array('jquery'), '0.8.20', true);
+
+    // **한글 번역(ko-KR) 추가**
+    wp_enqueue_script('summernote-lang-kr', 'https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-ko-KR.min.js', array('summernote-js'), '0.8.20', true);
 }
 add_action('wp_enqueue_scripts', 'my_enqueue_jquery_scripts');
-
 /* 3) 테마 메뉴 등록 */
 function melted_mint_setup() {
     register_nav_menus(array(
@@ -219,14 +222,12 @@ function handle_submit_post_ajax() {
     }
 
     // 3) 기본 입력값
-    $post_title   = sanitize_text_field($_POST['post_title']);
-    $post_desc    = sanitize_text_field($_POST['post_description']);
-    $license_value= isset($_POST['license_value']) ? sanitize_text_field($_POST['license_value']) : '';
-    $post_content = wp_kses_post($_POST['post_content']);
-    $selected_cat = intval($_POST['selected_category']);
-    $selected_tags= isset($_POST['selected_tags']) ? sanitize_text_field($_POST['selected_tags']) : '';
-
-    // (A) one_liner (한마디글)
+    $post_title    = sanitize_text_field($_POST['post_title']);
+    $post_desc     = sanitize_text_field($_POST['post_description']);
+    $license_value = isset($_POST['license_value']) ? sanitize_text_field($_POST['license_value']) : '';
+    $post_content  = wp_kses_post($_POST['post_content']);
+    $cat_slug      = isset($_POST['selected_category']) ? sanitize_text_field($_POST['selected_category']) : '';
+    $selected_tags = isset($_POST['selected_tags']) ? sanitize_text_field($_POST['selected_tags']) : '';
     $one_liner_value = isset($_POST['one_liner_value']) ? sanitize_text_field($_POST['one_liner_value']) : '';
 
     // 댓글 상태
@@ -235,7 +236,7 @@ function handle_submit_post_ajax() {
         $comment_status = sanitize_text_field($_POST['comment_status']);
     }
 
-    // 4) 기본 post_status, post_date
+    // 4) post_status, post_date
     $post_status = 'publish';
     $post_date   = current_time('mysql'); 
     $post_date_gmt= get_gmt_from_date($post_date);
@@ -250,7 +251,7 @@ function handle_submit_post_ajax() {
         $post_status = 'private';
     }
 
-    // (D) 예약 옵션 체크
+    // (D) 예약 옵션
     $publish_option = isset($_POST['publish_option']) ? sanitize_text_field($_POST['publish_option']) : 'immediate';
     if ( $publish_option === 'schedule' && ! empty($_POST['scheduled_time']) ) {
         $scheduled_time = sanitize_text_field($_POST['scheduled_time']);
@@ -276,14 +277,45 @@ function handle_submit_post_ajax() {
         }
     }
 
+    // **[변경] 카테고리 slug → ID 변환**
+    $cat_id = 0;
+    if ( ! empty($cat_slug) ) {
+        $cat_obj = get_category_by_slug($cat_slug);
+        if ( $cat_obj && ! is_wp_error($cat_obj) ) {
+            $cat_id = (int) $cat_obj->term_id;
+        }
+    }
+    // 만약 $cat_id == 0 이면 에러 처리할 수도
+    if ( $cat_id === 0 ) {
+        wp_send_json_error('올바른 카테고리 슬러그가 아닙니다: ' . $cat_slug);
+    }
+
+    // **[변경] 태그 slug → ID 변환** (이미 존재하면 사용, 없으면 새로 생성)
+    $tag_ids = array();
+    $tags_array = array_filter(array_map('trim', explode(',', $selected_tags)));
+    foreach ( $tags_array as $slug ) {
+        if ( ! $slug ) continue;
+        $term = get_term_by('slug', $slug, 'post_tag');
+        if ( $term && ! is_wp_error($term) ) {
+            $tag_ids[] = (int) $term->term_id;
+        } else {
+            // 새로 생성
+            $new_tag = wp_insert_term($slug, 'post_tag', array('slug' => $slug));
+            if ( ! is_wp_error($new_tag) ) {
+                $tag_ids[] = (int) $new_tag['term_id'];
+            }
+        }
+    }
+
     // 6) 최종 wp_insert_post
     $new_post = array(
         'post_type'      => $page,
         'post_title'     => $post_title,
         'post_content'   => $post_content,
         'post_author'    => get_current_user_id(),
-        'post_category'  => array($selected_cat),
-        'tags_input'     => explode(',', $selected_tags),
+        'post_category'  => array($cat_id),
+        // tags_input에 ID 배열을 넘겨도 되고, tax_input 사용해도 됨
+        'tags_input'     => $tag_ids, 
         'comment_status' => $comment_status,
         'post_status'    => $post_status,
         'post_date'      => $post_date,
@@ -300,7 +332,7 @@ function handle_submit_post_ajax() {
             update_post_meta($post_id, 'license', $license_value);
         }
 
-        // 한마디글( one_liner_value )
+        // 한마디글
         if ( ! empty($one_liner_value) ) {
             update_post_meta($post_id, 'one_liner', $one_liner_value);
         }
@@ -312,7 +344,7 @@ function handle_submit_post_ajax() {
 
         // 응답
         $is_scheduled = ($post_status === 'future');
-        wp_send_json_success( array(
+        wp_send_json_success(array(
             'post_id'   => $post_id,
             'scheduled' => $is_scheduled
         ));
@@ -323,67 +355,61 @@ function handle_submit_post_ajax() {
 
 /* 댓글 */
 function my_custom_comment_callback($comment, $args, $depth) {
+    // WP 전역 변수 설정
+    $GLOBALS['comment'] = $comment;
+
+    // 스타일: 리스트인지 div인지
     $tag = ( 'div' === $args['style'] ) ? 'div' : 'li';
-    // 댓글 하나를 감싸는 li/div에 줄 클래스
-    $comment_classes = 'p-4 bg-base-200 rounded-md flex gap-3 my-2';
-    ?>
-    <<?php echo $tag; ?> <?php comment_class($comment_classes); ?> id="comment-<?php comment_ID(); ?>">
 
-        <!-- (1) 아바타 -->
-        <div class="comment-avatar flex-shrink-0">
-            <?php
-            if ( $args['avatar_size'] != 0 ) {
-                echo get_avatar( $comment, $args['avatar_size'] );
-            }
-            ?>
-        </div>
+    // depth에 따라 들여쓰기나 border-left로 "ㄴ" 구조 표현
+    // 예: Tailwind로 left border + padding
+    // 예시로 depth 1이면 ml-0, depth 2면 ml-4, depth 3면 ml-8 ...
+    // 아래는 단순 예시
+    $depth_class = 'ml-' . (4 * ($depth - 1));
 
-        <!-- (2) 본문 -->
-        <div class="flex-1">
-            <div class="comment-author font-semibold">
-                <?php printf( '<cite class="fn">%s</cite>', get_comment_author_link() ); ?>
-            </div>
-            <div class="comment-meta text-sm text-gray-500 mb-2">
-                <?php
-                printf(
-                    '<a href="%1$s">%2$s</a>',
-                    esc_url( get_comment_link( $comment->comment_ID ) ),
-                    sprintf( '%1$s %2$s', get_comment_date('', $comment), get_comment_time() )
-                );
-                ?>
-            </div>
-            <?php if ( '0' == $comment->comment_approved ) : ?>
-                <em class="text-red-500 block mb-2">댓글 승인 대기중...</em>
-            <?php endif; ?>
+    // HTML 래핑 시작
+    echo "<{$tag} "; 
+    comment_class("my-comment depth-{$depth} {$depth_class} border-l border-gray-300 pl-4 mb-4"); 
+    echo ' id="comment-'. get_comment_ID() . '">';
 
-            <div class="comment-text mb-2">
-                <?php comment_text(); ?>
-            </div>
+    // (1) 아바타 + 작성자 + 날짜
+    echo '<div class="flex items-start gap-3 mb-2">';
+        // 아바타
+        if ( $args['avatar_size'] != 0 ) {
+            echo get_avatar( $comment, $args['avatar_size'], '', '', ['class' => 'rounded-full'] );
+        }
+        // 작성자명 + 날짜
+        echo '<div>';
+            echo '<span class="font-semibold">';
+            comment_author_link();
+            echo '</span>';
+            echo '<div class="text-sm text-gray-500">';
+            // 날짜/시간
+            echo get_comment_date('Y-m-d H:i');
+            echo '</div>';
+        echo '</div>';
+    echo '</div>'; // end flex
 
-            <div class="reply text-sm">
-                <?php 
-                comment_reply_link(array_merge($args, array(
-                    'reply_text' => '답글 달기',
-                    'depth'      => $depth,
-                    'max_depth'  => $args['max_depth'],
-                ))); 
-                ?>
-            </div>
+    // (2) 승인 대기
+    if ( '0' == $comment->comment_approved ) {
+        echo '<em class="text-red-500 block mb-2">댓글 승인 대기중...</em>';
+    }
 
-            <!-- (부모 댓글에 자식(대댓글)이 있다면 "펼치기" 버튼 표시) -->
-            <?php
-            // WP가 자식 댓글을 자동으로 <ul class="children"> ... </ul> 형태로 렌더링.
-            // 자식 댓글이 있으면, 이 li 내부에 <ul class="children">가 추가됨.
-            // 아래에서 자식 댓글을 감싸는 ul에 display:none 처리를 위해 class를 추가할 수도 있고,
-            // JS에서 .children를 찾는 방식으로 숨길 수도 있습니다.
-            ?>
-        </div>
-    </<?php echo $tag; ?>>
-    <?php
-    // WP가 자식 댓글(대댓글)을 자동으로 <ul class="children">로 출력하도록
-    // 뒤쪽에서 wp_list_comments()가 호출 시, 내부적으로 Walker가
-    // 이 callback을 depth별로 호출 + 자식 <ul class="children"> 삽입.
-    // 즉, 여기서 굳이 별도 children html을 직접 찍지 않아도 됩니다.
+    // (3) 댓글 본문
+    echo '<div class="mb-2">';
+    comment_text();
+    echo '</div>';
+
+    // (4) "답글 달기" 버튼
+    echo '<div class="text-sm reply">';
+    comment_reply_link(array_merge($args, [
+        'reply_text' => '답글 달기',
+        'depth'      => $depth,
+        'max_depth'  => $args['max_depth'],
+    ]));
+    echo '</div>';
+
+    echo "</{$tag}>";
 }
 
 /* 댓글 웨 리다이렉트 되 지 ? */
@@ -394,64 +420,77 @@ function mytheme_comment_redirect_to_post($location, $comment) {
 add_filter('comment_post_redirect', 'mytheme_comment_redirect_to_post', 10, 2);
 
 /* 무한스크롤 */
-// (A) 액션 훅 등록
-add_action('wp_ajax_my_infinite_scroll', 'my_infinite_scroll_handler');
-add_action('wp_ajax_nopriv_my_infinite_scroll', 'my_infinite_scroll_handler');
-
-/**
- * (B) 무한스크롤용 Ajax 핸들러
- * - post_type: blog, community
- * - paged: $_POST['paged']
- */
-function my_infinite_scroll_handler() {
-    // paged 파라미터
+// 예: functions.php 하단에 (이미 존재한다면 중복 선언 금지)
+add_action('wp_ajax_my_infinite_scroll_timeline', 'my_infinite_scroll_timeline');
+add_action('wp_ajax_nopriv_my_infinite_scroll_timeline', 'my_infinite_scroll_timeline');
+function my_infinite_scroll_timeline() {
     $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
 
-    // 쿼리 생성
-    $args = array(
-        'post_type'      => array('blog','community'),
-        'posts_per_page' => 10,
+    // blog + community 글 최신순
+    $args = [
+        'post_type'      => ['blog','community'],
+        'posts_per_page' => 5,
         'paged'          => $paged,
         'orderby'        => 'date',
         'order'          => 'DESC',
-    );
+    ];
     $query = new WP_Query($args);
 
     if ($query->have_posts()) {
-        // 출력 버퍼 시작
         ob_start();
         while ($query->have_posts()) {
             $query->the_post();
-            // 원하는 HTML 구조를 직접 출력
-            // 여기서는 간단히 <li>만 예시
+            $p_type   = get_post_type();
+            $title    = get_the_title();
+            $permalink= get_permalink();
+            $date     = get_the_date('Y-m-d');
+            $excerpt  = get_the_excerpt(); // 자유롭게
             ?>
-            <li class="p-4 cardComponent rounded-lg shadow-md">
-                <a href="<?php the_permalink(); ?>" class="font-semibold text-xl">
-                    <?php the_title(); ?>
-                </a>
-                <p class="text-sm text-gray-500">
-                    <?php echo get_the_date('Y-m-d'); ?>
-                </p>
-            </li>
+            <!--
+              post_item: Tailwind + DaisyUI card 예시
+              data-post-type 에 blog or community 
+            -->
+            <div 
+              class="post-item card w-full bg-base-100 shadow-xl mb-8 relative"
+              data-post-type="<?php echo esc_attr($p_type); ?>">
+
+              <!-- 원(점) 표시: 중앙선과 연결 -->
+              <div class="timeline-dot 
+                          w-4 h-4 rounded-full bg-primary
+                          absolute left-1/2 -translate-x-1/2
+                          top-0 z-10">
+              </div>
+
+              <!-- 수직 연결선 (dot 아래쪽) -->
+              <div class="timeline-connector
+                          absolute left-1/2 -translate-x-1/2
+                          top-4 w-[2px] bg-base-300 h-full">
+              </div>
+
+              <!-- 실제 카드 내용 -->
+              <div class="card-body">
+                <h2 class="card-title"><?php echo esc_html($title); ?></h2>
+                <p class="text-sm text-gray-500"><?php echo esc_html($date); ?></p>
+                <p><?php echo esc_html($excerpt); ?></p>
+                <div class="card-actions justify-end">
+                  <a href="<?php echo esc_url($permalink); ?>" class="btn btn-primary">자세히</a>
+                </div>
+              </div>
+            </div>
             <?php
         }
         wp_reset_postdata();
         $html = ob_get_clean();
 
-        // 남은 페이지 확인
         $max_page = $query->max_num_pages;
-
-        // JSON 응답
-        wp_send_json_success(array(
-            'html'     => $html,        // 새 글 목록 HTML
-            'max_page' => $max_page,    // 최대 페이지
-        ));
+        wp_send_json_success([
+            'html'     => $html,
+            'max_page' => $max_page,
+        ]);
     } else {
-        // 더 이상 글이 없으면
-        wp_send_json_error('No more posts');
+        wp_send_json_error('더 이상 포스트가 없습니다.');
     }
 }
-
 // functions.php 내에 추가
 
 // (A) REST API 엔드포인트 등록
