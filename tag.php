@@ -1,16 +1,22 @@
 <?php
 /**
- * category.php
+ * tag.php (카테고리 제거 + 문제 해결 버전)
  * 
- * URL 구조: /category/(카테고리슬러그)/(페이지이름)
- * 예) /category/news/blog
- *     => category_name=news, mypage=blog
+ * 요구사항:
+ *   1) 카테고리 제거
+ *   2) 태그 목록을 사이드바에 배치
+ *   3) 선택된 태그는 activatedButton. 해당 태그만 필터링
+ *   4) 블로그/커뮤니티 버튼 누르면 해당 CPT만 표시 + activatedButton
+ * 
+ * 수정사항:
+ *   - 블로그/커뮤니티 버튼 클릭 시 홈으로 돌아가는 문제 해결(쿼리스트링 방식)
+ *   - 선택 태그가 한글일 때 퍼센트 인코딩되는 문제 해결(태그 이름으로 표시)
  */
 
 get_header();
 
 /** ------------------------------
- * 1) 커스텀 페이지네이션 함수
+ * 1) 커스텀 페이지네이션
  * ------------------------------ */
 if ( ! function_exists('custom_two_skip_pagination') ) {
     function custom_two_skip_pagination($wp_query = null) {
@@ -52,7 +58,6 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
         $range = 2;
 
         if ($total_pages <= 5) {
-            // 5페이지 이하 => 전체 페이지 표시
             for ($i = 1; $i <= $total_pages; $i++) {
                 if ($i == $paged) {
                     echo '<span class="' . $btn_active_class . '">' . $i . '</span>';
@@ -61,7 +66,6 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
                 }
             }
         } else {
-            // 5페이지 초과 => 처음/끝/현재 주변만 표시
             // 첫 페이지
             if ($paged == 1) {
                 echo '<span class="' . $btn_active_class . '">1</span>';
@@ -114,7 +118,7 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
 
         echo '</div>';
 
-        // 페이지 직접 입력 폼 (선택 사항)
+        // (선택) 페이지 직접 이동 폼
         echo '<div class="flex items-center justify-center my-4">';
         echo '<form action="" method="GET" class="flex items-center gap-2">';
         echo '<label for="paged" class="whitespace-nowrap text-sm sm:text-lg md:text-xl">Go to page >> </label>';
@@ -126,190 +130,178 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
 }
 
 /** ------------------------------
- * 2) 카테고리/페이지(세션) 파라미터
+ * 2) GET 파라미터로 mypage, tag 체크
  * ------------------------------ */
-// rewrite 규칙을 통해 category_name, mypage가 넘어옴
-$category_slug = get_query_var('category_name'); // 예: news, notice 등
-$mypage        = get_query_var('mypage');        // 예: blog, community 등
+// get_query_var('mypage')가 비어 있으면 $_GET['mypage'] 사용
+$mypage = get_query_var('mypage');
+if ( empty($mypage) && isset($_GET['mypage']) ) {
+    $mypage = sanitize_text_field($_GET['mypage']);
+}
 
-// 세션 => CPT 매핑
+// blog / community 구분
 switch ($mypage) {
-    case 'blog':
-        $current_post_type = 'blog';
-        $page_label        = '블로그';
-        break;
     case 'community':
         $current_post_type = 'community';
         $page_label        = '커뮤니티';
         break;
+    case 'blog':
     default:
-        // 잘못된 페이지이름이면 기본값(블로그)으로 처리
         $current_post_type = 'blog';
         $page_label        = '블로그';
         break;
 }
 
+// get_query_var('tag')가 비어 있으면 $_GET['tag'] 사용
+$current_tag_slug = get_query_var('tag');
+if ( empty($current_tag_slug) && isset($_GET['tag']) ) {
+    $current_tag_slug = sanitize_text_field($_GET['tag']);
+}
+
 /** ------------------------------
- * 3) 메인 쿼리: 현재 CPT + 카테고리
+ * 3) 메인 쿼리: mypage(CPT) + tag 필터링
  * ------------------------------ */
 $paged = max(1, get_query_var('paged'));
 $args = array(
-    'post_type'      => $current_post_type,
+    'post_type'      => $current_post_type,   // 블로그 or 커뮤니티
     'posts_per_page' => 10,
     'paged'          => $paged,
     'orderby'        => 'date',
     'order'          => 'DESC',
-    'category_name'  => $category_slug, // 기본 카테고리 필터
 );
+if ( ! empty($current_tag_slug) ) {
+    $args['tag'] = $current_tag_slug;
+}
 $query = new WP_Query($args);
 
 /** ------------------------------
- * 4) 사이드바용 카테고리 목록
- *    - 소설(novel), 외전(spinoff)에 쓰인 카테고리는 제외
- *    - 현재 CPT에 글이 없는 카테고리는 제외
+ * 4) 사이드바용 태그 목록
  * ------------------------------ */
-$all_categories = get_categories(array(
-    'hide_empty' => false,  // 일단 모두 가져온 뒤, 개별적으로 필터링
-    'orderby'    => 'id',
-    'order'      => 'ASC',
+$all_tags = get_tags(array(
+    'hide_empty' => true,
+    'orderby'    => 'name',
+    'order'      => 'ASC'
 ));
-
-// (A) 소설, 외전에 쓰인 카테고리인지 체크
-function is_used_by_novel_or_spinoff($cat_id) {
-    $check_query = new WP_Query(array(
-        'post_type'      => array('novel','spinoff'),
-        'cat'            => $cat_id,
-        'posts_per_page' => 1,
-        'fields'         => 'ids',
-    ));
-    $used = $check_query->have_posts();
-    wp_reset_postdata();
-    return $used;
-}
-
-// (B) 현재 CPT에 글이 1개 이상 있는지 확인
-function has_post_in_current_cpt($cat_id, $cpt) {
-    $check_query = new WP_Query(array(
-        'post_type'      => $cpt,
-        'cat'            => $cat_id,
-        'posts_per_page' => 1,
-        'fields'         => 'ids',
-    ));
-    $has_post = $check_query->have_posts();
-    wp_reset_postdata();
-    return $has_post;
-}
 ?>
 
 <!-- 레이아웃 시작 -->
 <div class="grid grid-cols-1 lg:grid-cols-[17.5rem_1fr] gap-4 py-4 max-w-[80rem] mx-auto sm:px-4 items-start">
 
-    <!-- 사이드바 (카테고리만) -->
+    <!-- 사이드바 -->
     <aside class="order-last lg:order-none lg:sticky lg:top-12 w-full self-start">
-        <!-- 상단: 세션(페이지) 선택 -->
+        
+        <!-- 상단: 블로그/커뮤니티 버튼 (페이지 전환) -->
         <div class="flex cardComponent rounded-xl px-2 py-2 max-w-[80rem] mx-auto sm:px-4 mb-4">
             <h3 class="text-lg font-bold mr-5 mt-1">페이지</h3>
             <ul class="flex space-x-2">
                 <?php
+                // 블로그/커뮤니티 버튼 각각 생성
                 $pages = array(
                     'blog'      => '블로그',
                     'community' => '커뮤니티',
                 );
                 foreach ($pages as $slug => $label):
-                    // 현재 섹션(mypage) 활성화 여부
+                    // 현재 페이지와 일치하면 activatedButton
                     $page_active_class = ($slug === $mypage) ? 'activatedButton' : '';
-                    // 링크: /category/현재카테고리슬러그/새mypage
-                    $page_link = home_url('/category/' . $category_slug . '/' . $slug);
+                    
+                    // 1) 기본 링크: home_url() => 예) http://도메인/
+                    // 2) add_query_arg( ['mypage'=>blog, 'tag'=>$current_tag_slug ], .. )
+                    //    => 누르면 blog + 현재 태그 유지
+                    $btn_link = add_query_arg(
+                        array(
+                            'mypage' => $slug,
+                            'tag'    => $current_tag_slug, // 현재 태그가 있다면 그대로 이어붙이기
+                        ),
+                        home_url('/') // 루트(혹은 원하는 베이스 URL)
+                    );
                 ?>
                 <li>
-                    <a href="<?php echo esc_url($page_link); ?>"
-                    class="btn btn-ghost tagButton btn-md mx-1 <?php echo esc_attr($page_active_class); ?>">
-                    <?php echo esc_html($label); ?>
+                    <a href="<?php echo esc_url($btn_link); ?>"
+                       class="btn btn-ghost tagButton btn-md mx-1 <?php echo esc_attr($page_active_class); ?>">
+                       <?php echo esc_html($label); ?>
                     </a>
                 </li>
                 <?php endforeach; ?>
             </ul>
         </div>
-        <div class="w-full cardComponent p-4 rounded-xl">
-            <h3 class="text-lg font-bold mb-2">카테고리</h3>
-            <ul class="space-y-1">
-            <?php foreach ($all_categories as $cat): ?>
-                <?php
-                // 1) 소설(novel), 외전(spinoff)에 쓰인 카테고리면 제외
-                if ( is_used_by_novel_or_spinoff($cat->term_id) ) {
-                    continue;
-                }
-                // 2) 현재 CPT에 글이 없으면 제외
-                if ( ! has_post_in_current_cpt($cat->term_id, $current_post_type) ) {
-                    continue;
-                }
-                // 활성화 여부
-                $active_class = ($cat->slug === $category_slug) ? 'activatedButton' : '';
-                // 클릭 시 /category/새카테고리슬러그/현재mypage
-                $cat_link = home_url('/category/' . $cat->slug . '/' . $mypage);
-                ?>
-                <li class="w-full hoveronlyButton rounded-lg h-10">
-                    <a href="<?php echo esc_url($cat_link); ?>"
-                    class="btn btn-ghost w-full flex justify-between items-center px-2 text-left <?php echo esc_attr($active_class); ?>">
-                        <!-- 왼쪽: 카테고리명 -->
-                        <span class="mt-1 text-sm">
-                            <?php echo esc_html($cat->name); ?>
-                        </span>
 
-                        <!-- 오른쪽: 게시물 개수 -->
-                        <span class="btn btn-ghost btn-disabled counterButton rounded-lg px-2 h-7">
-                            <?php echo esc_html($cat->count); ?>
-                        </span>
-                    </a>
-                </li>
-            <?php endforeach; ?>
+        <!-- 태그 목록 -->
+        <div class="w-full cardComponent p-4 rounded-xl">
+            <h3 class="text-lg font-bold mb-2">태그</h3>
+            <ul class="flex flex-wrap gap-2">
+                <?php foreach ($all_tags as $tag_obj): ?>
+                    <?php
+                    // 현재 선택된 태그와 같으면 activatedButton
+                    $tag_active_class = ($tag_obj->slug === $current_tag_slug) ? 'activatedButton' : '';
+
+                    // 태그 링크도 동일하게 ?mypage=XXX&tag=YYY 형태로 가도 되지만,
+                    // WordPress 기본 태그 링크(/tag/slug/)를 쓰려면 rewrite 설정이 필요.
+                    // 여기서는 쿼리스트링 방식으로 일관성 있게 처리해볼 수도 있음.
+
+                    $tag_link = add_query_arg(
+                        array(
+                            'mypage' => $mypage,       // 현재 페이지(블로그/커뮤니티)
+                            'tag'    => $tag_obj->slug // 클릭한 태그
+                        ),
+                        home_url('/')
+                    );
+                    ?>
+                    <li>
+                        <a href="<?php echo esc_url($tag_link); ?>"
+                           class="btn btn-ghost p-1 tagButton h-8 <?php echo esc_attr($tag_active_class); ?>">
+                           <?php echo esc_html($tag_obj->name); ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
             </ul>
         </div>
     </aside>
 
     <!-- 메인 영역 -->
     <main class="order-first lg:order-none rounded-xl">
-        <!-- 선택된 카테고리 + 페이지 라벨 -->
+        <!-- 상단 제목 -->
         <div class="cardComponent p-4 rounded-xl mb-4">
-            <h2 class="text-xl font-semibold">
-                <?php
-                // 현재 카테고리명
-                $current_cat_obj = get_category_by_slug($category_slug);
-                $cat_name = $current_cat_obj ? $current_cat_obj->name : $category_slug;
-                echo esc_html($cat_name) . ' > ' . esc_html($page_label);
-                ?>
-            </h2>
+            <h2 class="text-xl font-semibold"><?php echo esc_html($page_label); ?></h2>
+            <?php
+            // 인코딩 풀린 태그명을 표시하려면, slug -> term으로 찾아서 name 사용
+            if ( ! empty($current_tag_slug) ) {
+                $tag_term = get_term_by('slug', $current_tag_slug, 'post_tag');
+                if ( $tag_term && ! is_wp_error($tag_term) ) {
+                    $decoded_tag_name = $tag_term->name;
+                } else {
+                    // term이 없으면 slug 자체를 urldecode
+                    $decoded_tag_name = urldecode($current_tag_slug);
+                }
+                echo '<p class="text-sm mt-2">선택한 태그: <strong>' 
+                     . esc_html($decoded_tag_name) 
+                     . '</strong></p>';
+            }
+            ?>
         </div>
 
-        <!-- 게시물 루프 (사용자님이 주신 카드형 loop) -->
+        <!-- 게시물 루프 -->
         <?php if ($query->have_posts()) : ?>
             <ul class="space-y-3">
                 <?php while ($query->have_posts()) : $query->the_post(); ?>
-                    <!-- 카드 컨테이너 -->
                     <li class="p-2 rounded-lg shadow-md grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 cardComponent">
                         
                         <!-- 왼쪽: 텍스트/메타 -->
                         <div class="pl-2 order-2 sm:order-1">
                             <!-- 제목 -->
-                            <a href="<?php the_permalink(); ?>" 
-                               class="block font-semibold group hoveronlyText text-xl sm:text-2xl"> 
+                            <a href="<?php the_permalink(); ?>"
+                               class="block font-semibold group hoveronlyText text-xl sm:text-2xl">
                                 <?php the_title(); ?>
-                                <!-- 기본적으로 보이지 않다가, group-hover 시 나타나도록 -->
-                                <svg class="w-8 h-8 sm:w-10 sm:h-10 inline-block transition-all opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 duration-100 fill-current -mt-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                                <svg class="w-8 h-8 sm:w-10 sm:h-10 inline-block transition-all opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 duration-100 fill-current -mt-2" fill="currentColor" viewBox="0 -960 960 960">
                                     <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
                                 </svg>
                             </a>
 
-                            <!-- Description 메타데이터 표시 -->
+                            <!-- 예시: Description 메타데이터 -->
                             <div class="ml-2 text-md sm:text-lg">
                                 <p>
                                     <?php
-                                    // 'description' 메타데이터 가져오기
-                                    $description = get_post_meta( get_the_ID(), 'description', true );
-                                    if ( ! empty( $description ) ) {
-                                        echo esc_html( $description );
-                                    } else {
-                                        echo '';
+                                    $description = get_post_meta(get_the_ID(), 'description', true);
+                                    if ($description) {
+                                        echo esc_html($description);
                                     }
                                     ?>
                                 </p>
@@ -349,47 +341,53 @@ function has_post_in_current_cpt($cat_id, $cpt) {
                             <!-- 태그 목록 -->
                             <div class="mt-1 sm:mt-2 flex w-fit items-center text-xs sm:text-sm grayTextThings">
                                 <div class="btn btn-ghost btn-xs sm:btn-sm btn-disabled btn-circle rounded-lg buttonComponent mr-1">
-                                    <!-- 태그 아이콘 -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="fill-current w-5 h-5 sm:w-6 sm:h-6"><path d="m240-160 40-160H120l20-80h160l40-160H180l20-80h160l40-160h80l-40 160h160l40-160h80l-40 160h160l-20 80H660l-40 160h160l-20 80H600l-40 160h-80l40-160H360l-40 160h-80Zm140-240h160l40-160H420l-40 160Z"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="fill-current w-5 h-5 sm:w-6 sm:h-6">
+                                        <path d="m240-160 40-160H120l20-80h160l40-160H180l20-80h160l40-160h80l-40 160h160l40-160h80l-40 160h160l-20 80H660l-40 160h160l-20 80H600l-40 160h-80l40-160H360l-40 160h-80Zm140-240h160l40-160H420l-40 160Z"/>
+                                    </svg>
                                 </div>
                                 <div>
                                     <?php
-                                    $tags = get_the_tags(); // 현재 글의 태그 배열 가져오기
-                                    if ($tags) :
+                                    $post_tags = get_the_tags();
+                                    if ($post_tags) {
                                         echo '<div class="flex flex-wrap items-center">';
-                                        foreach ($tags as $index => $tag) :
-                                            $tag_link = get_tag_link($tag->term_id);
-                                            // 첫 번째 버튼이 아니라면, 앞에 슬래시를 표시
+                                        foreach ($post_tags as $index => $t) {
+                                            $tag_link = add_query_arg(
+                                                array(
+                                                    'mypage' => $mypage,    // 현재 페이지
+                                                    'tag'    => $t->slug,   // 해당 글의 태그 슬러그
+                                                ),
+                                                home_url('/')
+                                            );
+                                            // 첫 버튼이 아니라면 슬래시 구분
                                             if ($index > 0) {
                                                 echo '<span class="mx-0">/</span>';
                                             }
                                             ?>
-                                            <a href="<?php echo esc_url($tag_link); ?>" 
+                                            <a href="<?php echo esc_url($tag_link); ?>"
                                                class="btn btn-ghost rounded-lg px-1 h-7 sm:h-8 lg:h-9 hoveronlyButton">
-                                                <?php echo esc_html($tag->name); ?>
+                                                <?php echo esc_html($t->name); ?>
                                             </a>
                                             <?php
-                                        endforeach;
+                                        }
                                         echo '</div>';
-                                    else:
+                                    } else {
                                         echo '<span class="grayTextThings ml-1">태그 없음</span>';
-                                    endif;
+                                    }
                                     ?>
                                 </div>
                             </div>
 
-                            <!-- 글자수(공백 제외), 읽기 시간(200WPM 기준) -->
+                            <!-- 글자수/읽기시간 (예시) -->
                             <?php
                             $content_raw       = get_the_content(null, false);
                             $content_stripped  = wp_strip_all_tags($content_raw);
                             $content_no_spaces = preg_replace('/\s+/', '', $content_stripped);
                             $char_count        = mb_strlen($content_no_spaces, 'UTF-8');
-                            // 영어 단어 수
-                            $word_count   = str_word_count($content_stripped);
-                            $reading_time = ceil($word_count / 200 + 1);
+                            $word_count        = str_word_count($content_stripped);
+                            $reading_time      = ceil($word_count / 200 + 1);
                             ?>
                             <div class="p-2 mt-1 sm:mt-2 text-md sm:text-lg grayTextThings">
-                                <?php echo number_format($char_count); ?> 글자&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                                <?php echo number_format($char_count); ?> 글자 |
                                 <?php echo $reading_time; ?>분
                             </div>
                         </div>
@@ -403,7 +401,7 @@ function has_post_in_current_cpt($cat_id, $cpt) {
                                             'class' => 'rounded-lg w-full h-40 sm:h-full object-cover transition ease-in-out duration-300 group-hover:opacity-40'
                                         ]); ?>
                                         <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition ease-in-out duration-200">
-                                            <svg class="w-16 h-16 text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                                            <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 -960 960 960">
                                                 <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
                                             </svg>
                                         </div>
@@ -411,11 +409,12 @@ function has_post_in_current_cpt($cat_id, $cpt) {
                                 </div>
                             </div>
                         <?php else: ?>
-                            <!-- 썸네일 없을 때 -->
+                            <!-- 썸네일이 없을 때 -->
                             <div class="hidden sm:block relative group overflow-hidden rounded order-1 sm:order-2">
                                 <div class="sm:w-24 sm:h-full">
-                                    <a href="<?php the_permalink(); ?>" class="btn btn-ghost rounded-lg tagButton w-full sm:h-full sm:flex items-center justify-center text-base-content">
-                                        <svg class="w-16 h-16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                                    <a href="<?php the_permalink(); ?>"
+                                       class="btn btn-ghost rounded-lg tagButton w-full sm:h-full sm:flex items-center justify-center text-base-content">
+                                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 -960 960 960">
                                             <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
                                         </svg>
                                     </a>
@@ -431,12 +430,13 @@ function has_post_in_current_cpt($cat_id, $cpt) {
             <?php wp_reset_postdata(); ?>
 
         <?php else : ?>
-            <p class="text-center p-4 cardComponent rounded-xl">이 카테고리에 글이 없습니다.</p>
+            <p class="text-center p-4 cardComponent rounded-xl">
+                게시물이 없습니다.
+            </p>
         <?php endif; ?>
     </main>
 </div>
 
-<?php 
-get_template_part('footer-navigation');
-get_template_part('footer-scroll');
+<?php
+get_template_part('templates/category-tag-footer-navigation');
 get_footer(); ?>

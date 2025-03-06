@@ -208,13 +208,13 @@ get_header();
                 <div class="mb-6" id="neighbors">
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                         <!-- 이전 글 -->
-                        <div class="cardComponent hoveronlyButton rounded-lg w-full sm:w-auto flex-1">
+                        <div class="cardComponent rounded-lg w-full sm:w-auto flex-1">
                             <?php if ( $prev_post ) : ?>
                                 <a href="<?php echo get_permalink($prev_post->ID); ?>"
                                    class="block text-base-content transition-colors
                                           rounded-md py-6 px-6
                                           flex items-center justify-between
-                                          text-2xl">
+                                          text-2xl hoveronlyButton">
                                     <svg class="w-14 h-14 -mx-3 -my-5 flex-shrink-0 mr-3" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                                     </svg>
@@ -223,19 +223,19 @@ get_header();
                                     </span>
                                 </a>
                             <?php else : ?>
-                                <span class="block py-6 px-6 rounded-md disabledButton text-center text-xl">
+                                <span class="block py-6 px-6 rounded-md text-center text-xl">
                                     이전 글이 없습니다.
                                 </span>
                             <?php endif; ?>
                         </div>
                         <!-- 다음 글 -->
-                        <div class="cardComponent hoveronlyButton rounded-lg w-full sm:w-auto flex-1">
+                        <div class="cardComponent rounded-lg w-full sm:w-auto flex-1">
                             <?php if ( $next_post ) : ?>
                                 <a href="<?php echo get_permalink($next_post->ID); ?>"
                                    class="block text-base-content transition-colors
                                           rounded-md py-6 px-6
                                           flex items-center justify-between
-                                          text-2xl">
+                                          text-2xl hoveronlyButton">
                                     <span class="flex-1 text-right">
                                         <?php echo get_the_title($next_post->ID); ?>
                                     </span>
@@ -244,7 +244,7 @@ get_header();
                                     </svg>
                                 </a>
                             <?php else : ?>
-                                <span class="block py-6 px-6 rounded-md disabledButton text-center text-xl">
+                                <span class="block py-6 px-6 rounded-md text-center text-xl">
                                     다음 글이 없습니다.
                                 </span>
                             <?php endif; ?>

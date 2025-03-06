@@ -21,6 +21,7 @@ require_once get_template_directory() . '/plugins/core.php';
 require_once get_template_directory() . '/plugins/class-all-posts-list-table.php';
 require_once get_template_directory() . '/plugins/link.php';    //custom link!
 require_once get_template_directory() . '/plugins/category-link.php';   // category link!
+require_once get_template_directory() . '/plugins/tag-link.php';    // tag link!
 
 /* 2) CSS & JS 로드 */
 function melted_mint_enqueue_scripts() {

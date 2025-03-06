@@ -65,8 +65,8 @@ body {
 }
 
 [data-theme="light"] .activatedButton {
-    color: oklch(0.4 0.03 var(--hue));
-    background-color: oklch(0.65 0.09 var(--hue));
+    color: oklch(0.9 0.03 var(--hue));
+    background-color: oklch(0.4 0.09 var(--hue));
 }
 
 [data-theme="light"] .activatedButton:hover {
@@ -81,7 +81,7 @@ body {
 
 [data-theme="light"] .availableButton {
     color: oklch(0.4 0.03 var(--hue));
-    background-color: oklch(0.4 0.15 var(--hue));
+    background-color: oklch(0.65 0.15 var(--hue));
 }
 
 [data-theme="light"] .availableButton:hover {

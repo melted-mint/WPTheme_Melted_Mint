@@ -29,7 +29,7 @@ $page_category_map = array(
     'blog'      => array('life', 'game', 'music', 'study', 'beselig'),
     'novel'     => array('마법사-시작합니다', '마법전자세계'),
     'spinoff'   => array('너만의-마법서'),
-    'community' => array('community')
+    'community' => array('life', 'game', 'music', 'study')
 );
 $page_category_detailed = array();
 foreach ($page_category_map as $page_slug => $cat_slugs) {

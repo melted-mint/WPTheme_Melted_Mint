@@ -4,8 +4,8 @@ if ( post_password_required() ) {
     return;
 }
 ?>
-<div class="cardComponent px-4 py-6 bg-base-200 text-base-content rounded-lg">
-    <div id="comments" class="mt-4">
+<div class="cardComponent px-4 py-4 bg-base-200 text-base-content rounded-lg">
+    <div id="comments">
         <?php if ( have_comments() ) : ?>
             <h2 class="text-xl font-semibold mb-4">
                 <?php
@@ -67,8 +67,6 @@ if ( post_password_required() ) {
                             placeholder: "댓글을 입력하세요...",
                             toolbar: [
                                 ["style", ["bold", "italic", "underline", "clear"]],
-                                ["para", ["ul", "ol", "paragraph"]],
-                                ["view", ["fullscreen", "codeview"]]
                             ],
                         });
                     });

@@ -94,7 +94,7 @@
                                 endforeach;
                                 echo '</div>';
                             else:
-                                echo '<span class="grayTextThings ml-1">No tags</span>';
+                                echo '<span class="grayTextThings ml-1">태그 없음</span>';
                             endif;
                             ?>
                         </div>
