@@ -421,76 +421,230 @@ function mytheme_comment_redirect_to_post($location, $comment) {
 add_filter('comment_post_redirect', 'mytheme_comment_redirect_to_post', 10, 2);
 
 /* 무한스크롤 */
-// 예: functions.php 하단에 (이미 존재한다면 중복 선언 금지)
+// 이미 추가된 부분이라 가정. 없다면 새로 추가.
+// (functions.php 내)
+
 add_action('wp_ajax_my_infinite_scroll_timeline', 'my_infinite_scroll_timeline');
 add_action('wp_ajax_nopriv_my_infinite_scroll_timeline', 'my_infinite_scroll_timeline');
+
 function my_infinite_scroll_timeline() {
     $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-
-    // blog + community 글 최신순
-    $args = [
-        'post_type'      => ['blog','community'],
+    
+    // 예시: blog(CPT) + community(CPT)를 가져온다고 가정
+    $args = array(
+        'post_type'      => array('blog','community'), 
         'posts_per_page' => 5,
         'paged'          => $paged,
         'orderby'        => 'date',
         'order'          => 'DESC',
-    ];
+    );
     $query = new WP_Query($args);
 
     if ($query->have_posts()) {
         ob_start();
         while ($query->have_posts()) {
             $query->the_post();
-            $p_type   = get_post_type();
-            $title    = get_the_title();
-            $permalink= get_permalink();
-            $date     = get_the_date('Y-m-d');
-            $excerpt  = get_the_excerpt(); // 자유롭게
-            ?>
-            <!--
-              post_item: Tailwind + DaisyUI card 예시
-              data-post-type 에 blog or community 
-            -->
-            <div 
-              class="post-item card w-full bg-base-100 shadow-xl mb-8 relative"
-              data-post-type="<?php echo esc_attr($p_type); ?>">
 
-              <!-- 원(점) 표시: 중앙선과 연결 -->
-              <div class="timeline-dot 
-                          w-4 h-4 rounded-full bg-primary
-                          absolute left-1/2 -translate-x-1/2
-                          top-0 z-10">
-              </div>
-
-              <!-- 수직 연결선 (dot 아래쪽) -->
-              <div class="timeline-connector
-                          absolute left-1/2 -translate-x-1/2
-                          top-4 w-[2px] bg-base-300 h-full">
-              </div>
-
-              <!-- 실제 카드 내용 -->
-              <div class="card-body">
-                <h2 class="card-title"><?php echo esc_html($title); ?></h2>
-                <p class="text-sm text-gray-500"><?php echo esc_html($date); ?></p>
-                <p><?php echo esc_html($excerpt); ?></p>
-                <div class="card-actions justify-end">
-                  <a href="<?php echo esc_url($permalink); ?>" class="btn btn-primary">자세히</a>
-                </div>
-              </div>
-            </div>
-            <?php
+            // 블로그인지 커뮤니티인지 구분
+            $p_type = get_post_type(); // 'blog' or 'community'
+            
+            // HTML 생성
+            echo my_timeline_card_html($p_type);
         }
-        wp_reset_postdata();
         $html = ob_get_clean();
 
-        $max_page = $query->max_num_pages;
-        wp_send_json_success([
-            'html'     => $html,
-            'max_page' => $max_page,
-        ]);
+        wp_reset_postdata();
+
+        wp_send_json_success(array(
+            'html' => $html,
+            'max_page' => $query->max_num_pages,
+        ));
     } else {
-        wp_send_json_error('더 이상 포스트가 없습니다.');
+        wp_send_json_error('No more posts');
     }
+}
+
+/**
+ * post-item(타임라인) + 카드 레이아웃 결합
+ */
+function my_timeline_card_html($post_type) {
+    // 블로그 -> 왼쪽 정렬 + 좌측 여백
+    // 커뮤니티 -> 오른쪽 정렬 + 우측 여백
+    if ($post_type === 'blog') {
+        // md 사이즈 이상에서 가로폭 절반, 왼쪽 padding
+        $side_class = 'mr-auto pr-8 lg:pl-20 w-full lg:w-1/2';
+    } else {
+        // 커뮤니티 -> 오른쪽 padding
+        $side_class = 'ml-auto pl-8 lg:pr-20 w-full lg:w-1/2';
+    }
+
+    ob_start();
+    ?>
+    <div class="post-item relative my-4 <?php echo esc_attr($side_class); ?>"
+         data-post-type="<?php echo esc_attr($post_type); ?>">
+
+      <!-- 타임라인 점 -->
+      <div class="absolute top-8
+                  <?php echo ($post_type === 'blog') ? 'right-8 translate-x-1/2' : 'left-8 -translate-x-1/2'; ?>
+                  w-4 h-4 rounded-full bg-<?php echo ($post_type === 'blog') ? 'primary' : 'secondary'; ?> z-20">
+      </div>
+
+      <!-- 카드 컨테이너 (질문 주신 layout 예시) -->
+      <div class="p-2 rounded-lg shadow-md grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 cardComponent">
+        
+        <!-- 왼쪽 텍스트/메타 (order-2 on small, order-1 on large) -->
+        <div class="pl-2 order-2 lg:order-1">
+          <!-- 제목 + 화살표 아이콘 -->
+          <a href="<?php the_permalink(); ?>" 
+             class="block font-semibold group hoveronlyText text-xl sm:text-2xl">
+            <?php the_title(); ?>
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 inline-block transition-all opacity-0 group-hover:opacity-100 
+                       translate-x-0 group-hover:translate-x-1 duration-100 fill-current -mt-2"
+                 fill="currentColor" viewBox="0 -960 960 960">
+              <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
+            </svg>
+          </a>
+
+          <!-- description 메타 -->
+          <div class="ml-2 text-md sm:text-lg">
+            <p>
+              <?php
+              $description = get_post_meta(get_the_ID(), 'description', true);
+              if (! empty($description)) {
+                  echo esc_html($description);
+              }
+              ?>
+            </p>
+          </div>
+
+          <!-- 날짜/수정일 + 카테고리 -->
+          <div class="flex flex-row">
+            <!-- 날짜 -->
+            <div class="flex mt-1 sm:mt-2 items-center text-xs sm:text-sm grayTextThings">
+              <div class="btn btn-ghost btn-xs sm:btn-sm btn-disabled btn-circle rounded-lg buttonComponent mr-2">
+                <!-- 달력 아이콘 -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" 
+                     class="fill-current w-5 h-5 sm:w-6 sm:h-6">
+                  <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40
+                           q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Z"/>
+                </svg>
+              </div>
+              <span class="mr-2"><?php echo get_the_date('Y-m-d'); ?></span>
+              <?php if (get_the_date() != get_the_modified_date()): ?>
+                <div class="btn btn-ghost btn-xs sm:btn-sm btn-disabled btn-circle rounded-lg buttonComponent mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" 
+                       class="fill-current w-5 h-5 sm:w-6 sm:h-6">
+                    <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40
+                             q33 0 56.5 23.5T840-720v200h-80v-40H200v400h280v80H200Zm0-560h560v-80H200v80Zm0 0v-80 80ZM560-80v-123
+                             l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q8 9 12.5 20t4.5 22q0 11-4 22.5T903-300L683-80H560Zm300-263
+                             -37-37 37 37ZM620-140h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z"/>
+                  </svg>
+                </div>
+                <span class="mr-2"><?php echo get_the_modified_date('Y-m-d'); ?></span>
+              <?php endif; ?>
+            </div>
+
+            <!-- 카테고리 -->
+            <div class="flex mt-1 sm:mt-2 w-fit items-center text-xs sm:text-sm grayTextThings">
+              <div class="btn btn-ghost btn-xs sm:btn-sm btn-disabled btn-circle rounded-lg buttonComponent mr-1">
+                <!-- 카테고리 아이콘 -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" 
+                     class="fill-current w-5 h-5 sm:w-6 sm:h-6">
+                  <path d="M300-80q-58 0-99-41t-41-99v-520q0-58 41-99t99-41h500v600q-25 0-42.5 17.5T740-220q0 25
+                           17.5 42.5T800-160v80H300Z"/>
+                </svg>
+              </div>
+              <div class="btn btn-ghost text-xs sm:text-sm rounded-lg h-7 sm:h-8 w-fit px-1 hoveronlyButton">
+                <?php the_category(''); ?>
+              </div>
+            </div>
+          </div>
+
+          <!-- 태그 목록 -->
+          <div class="mt-1 sm:mt-2 flex w-fit items-center text-xs sm:text-sm grayTextThings">
+            <div class="btn btn-ghost btn-xs sm:btn-sm btn-disabled btn-circle rounded-lg buttonComponent mr-1">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" 
+                   class="fill-current w-5 h-5 sm:w-6 sm:h-6">
+                <path d="m240-160 40-160H120l20-80h160l40-160H180l20-80h160l40-160h80
+                         l-40 160h160l40-160h80l-40 160h160l-20 80H660l-40 160h160l-20 80H600l-40 160h-80
+                         l40-160H360l-40 160h-80Zm140-240h160l40-160H420l-40 160Z"/>
+              </svg>
+            </div>
+            <div>
+              <?php
+              $tags = get_the_tags();
+              if ($tags) {
+                echo '<div class="flex flex-wrap items-center">';
+                foreach ($tags as $index => $t) {
+                  $tag_link = get_tag_link($t->term_id);
+                  if ($index > 0) {
+                    echo '<span class="mx-0">/</span>';
+                  }
+                  ?>
+                  <a href="<?php echo esc_url($tag_link); ?>" 
+                     class="btn btn-ghost rounded-lg px-1 h-7 sm:h-8 lg:h-9 hoveronlyButton">
+                     <?php echo esc_html($t->name); ?>
+                  </a>
+                  <?php
+                }
+                echo '</div>';
+              } else {
+                echo '<span class="grayTextThings ml-1">태그 없음</span>';
+              }
+              ?>
+            </div>
+          </div>
+
+          <!-- 글자수 + 읽기시간 -->
+          <?php
+          $content_raw       = get_the_content(null, false);
+          $content_stripped  = wp_strip_all_tags($content_raw);
+          $content_no_spaces = preg_replace('/\s+/', '', $content_stripped);
+          $char_count        = mb_strlen($content_no_spaces, 'UTF-8');
+          $word_count        = str_word_count($content_stripped);
+          $reading_time      = max(1, ceil($word_count / 200));
+          ?>
+          <div class="p-2 mt-1 sm:mt-2 text-md sm:text-lg grayTextThings">
+            <?php echo number_format($char_count); ?> 글자&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+            <?php echo $reading_time; ?>분
+          </div>
+        </div> <!-- /왼쪽 텍스트 -->
+
+        <!-- 썸네일 영역 -->
+        <?php if ( has_post_thumbnail() ): ?>
+          <div class="-mb-2 lg:mb-0 relative group overflow-hidden rounded order-1 lg:order-2">
+            <div class="lgg:w-50 w-full h-full">
+              <a href="<?php the_permalink(); ?>" class="block w-full h-full relative">
+                <?php the_post_thumbnail('medium', [
+                  'class' => 'rounded-lg w-full h-40 lg:h-full object-cover 
+                              transition ease-in-out duration-300 group-hover:opacity-40'
+                ]); ?>
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 
+                            group-hover:opacity-100 transition ease-in-out duration-200">
+                  <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 -960 960 960">
+                    <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
+                  </svg>
+                </div>
+              </a>
+            </div>
+          </div>
+        <?php else: ?>
+          <!-- 썸네일 없을 때 -->
+          <div class="hidden lg:block relative group overflow-hidden rounded order-1 lg:order-2">
+            <div class="lg:w-24 lg:h-full">
+              <a href="<?php the_permalink(); ?>" 
+                 class="btn btn-ghost rounded-lg tagButton w-full lg:h-full lg:flex items-center justify-center text-base-content">
+                <svg class="w-16 h-16" fill="currentColor" viewBox="0 -960 960 960">
+                  <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        <?php endif; ?>
+      </div> <!-- /카드 컨테이너 -->
+    </div>
+    <?php
+    return ob_get_clean();
 }
 // functions.php 내에 추가
 

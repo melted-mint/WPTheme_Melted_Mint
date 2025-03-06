@@ -2,83 +2,35 @@
 /**
  * Template Name: Split Timeline with Fixed Boxes
  *
- * - 상단 네비: 생략(있다고 가정)
- * - 왼쪽 상단 "블로그" 박스(fixed), 오른쪽 상단 "커뮤니티" 박스(fixed)
- * - 중앙 세로 라인
- * - 가운데에 글들이 쌓이는데, blog면 왼쪽으로, community면 오른쪽으로 배치
- * - 무한 스크롤
+ * 요구사항 정리:
+ *   - 중앙 세로 라인
+ *   - 좌측 상단 "블로그" 박스, 우측 상단 "커뮤니티" 박스는 position:fixed
+ *   - 블로그 글 => 가운데 선 기준 왼쪽
+ *   - 커뮤니티 글 => 가운데 선 기준 오른쪽
+ *   - 무한 스크롤 (함수는 functions.php에 있다고 가정)
+ *   - 카드 모양/레이아웃은 질문 주신 예시 코드 사용
  */
 
-get_header();
+get_header(); 
 ?>
 
-<!-- 간단한 CSS (Tailwind + DaisyUI를 쓰지만, 약간의 custom CSS도 필요) -->
-<style>
-  .timeline-container {
-    position: relative;
-    min-height: 100vh;
-    padding-top: 120px; /* 상단 네비/박스 높이만큼 여백 */
-  }
-  /* 중앙 세로 라인 */
-  .center-line {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    width: 2px;
-    background-color: var(--tw-prose-body, #d4d4d4);
-    /* 아래 높이는 적당히 크게 주거나 JS로 계산 */
-    height: 9999px; 
-    z-index: 0; /* 뒤로 */
-  }
-
-  /* post-item 은 기본적으로 가운데(dot) 기준이 되도록 relative */
-  .post-item {
-    width: 40rem; /* 카드 폭 예시 */
-    margin: 2rem auto; /* 수직 간격 */
-  }
-
-  /* 블로그는 왼쪽으로 밀기 */
-  .post-item[data-post-type="blog"] {
-    transform: translateX(-50%); /* 왼쪽 */
-  }
-  /* 커뮤니티는 오른쪽으로 밀기 */
-  .post-item[data-post-type="community"] {
-    transform: translateX(calc(-50% + 20rem));
-    /* 필요에 따라 계산 조정 (예: 카드 폭 절반 만큼 + 여백) */
-  }
-
-  /* dot, connector는 이미 .absolute left-1/2 처리가 되어 있음 */
-
-</style>
-
-<div class="timeline-container">
-
-  <!-- 좌측 상단 고정 박스 -->
-  <div class="fixed top-24 left-10">
-    <div class="bg-blue-500 text-white p-4 rounded shadow-md">
-      <span class="font-bold">블로그</span>
-    </div>
-  </div>
-
-  <!-- 우측 상단 고정 박스 -->
-  <div class="fixed top-24 right-10">
-    <div class="bg-red-500 text-white p-4 rounded shadow-md">
-      <span class="font-bold">커뮤니티</span>
-    </div>
-  </div>
+<div class="relative min-h-screen pt-4"> <!-- 상단 여백 -->
 
   <!-- 중앙 세로 라인 -->
-  <div class="center-line"></div>
+  <div class="absolute left-1/2 top-0 w-0.5 h-full bg-base-300 -translate-x-1/2"></div>
 
-  <!-- 글 목록 담는 영역 -->
-  <div id="timeline-posts" class="relative z-10">
-    <!-- 여기에 Ajax 로드된 .post-item들이 들어옴 -->
+  <!-- 글 목록을 담는 컨테이너 (무한 스크롤로 글이 append) -->
+  <div id="timeline-posts" class="relative z-10 container mx-auto mt-12">
+    <!-- Ajax로 추가되는 .post-item들이 들어갑니다. -->
   </div>
 
-  <!-- 로딩중/더보기 표시 -->
-  <div id="loading-indicator" class="text-center mt-6 hidden">
-    <span class="btn btn-ghost loading">로딩중...</span>
+  <!-- 로딩중 표시 -->
+  <div id="loading-indicator" class="flex justify-center mt-6 mb-8 hidden">
+    <button class="btn btn-ghost loading">
+      로딩중 <span class="loading loading-dots loading-md"></span>
+    </button>
   </div>
+
 </div>
 
 <script>
@@ -88,19 +40,21 @@ document.addEventListener('DOMContentLoaded', function() {
   let isLoading = false;
 
   const timelineContainer = document.getElementById('timeline-posts');
-  const loadingIndicator  = document.getElementById('loading-indicator');
+  const loadingIndicator = document.getElementById('loading-indicator');
 
   // 첫 로드
   loadMorePosts();
 
+  // 스크롤 이벤트
   window.addEventListener('scroll', function() {
     if (isLoading) return;
+
     const scrollY = window.scrollY;
     const windowH = window.innerHeight;
-    const docH    = document.body.scrollHeight;
-
+    const docH = document.body.scrollHeight;
+    
+    // 스크롤이 끝에서 300px 남았을 때 추가 로드
     if (scrollY + windowH >= docH - 300) {
-      // 페이지 하단 근처
       if (currentPage < maxPage) {
         loadMorePosts();
       }
@@ -112,21 +66,22 @@ document.addEventListener('DOMContentLoaded', function() {
     loadingIndicator.classList.remove('hidden');
     currentPage++;
 
+    // 무한 스크롤 Ajax
     jQuery.ajax({
       url: "<?php echo admin_url('admin-ajax.php'); ?>",
-      method: 'POST',
+      type: "POST",
       data: {
-        action: 'my_infinite_scroll_timeline',
+        action: 'my_infinite_scroll_timeline', // functions.php에 정의된 action
         paged: currentPage
       },
-      success: function(res) {
+      success: function(response) {
         isLoading = false;
         loadingIndicator.classList.add('hidden');
-        if (res.success) {
-          timelineContainer.insertAdjacentHTML('beforeend', res.data.html);
-          maxPage = res.data.max_page;
-        } else {
-          // 끝
+
+        if (response.success) {
+          // 새로운 post-item HTML 추가
+          timelineContainer.insertAdjacentHTML('beforeend', response.data.html);
+          maxPage = response.data.max_page;
         }
       },
       error: function() {
@@ -138,5 +93,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php
-get_footer();
+<?php get_footer(); ?>

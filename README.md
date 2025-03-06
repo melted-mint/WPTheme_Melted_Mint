@@ -55,12 +55,13 @@ in this manual, domain name is domain.com.
 ## install things  
 1. ```sudo apt-get update```  
 2. ```sudo apt-get upgrade -y```  
-3. ```sudo apt install php-common libapache2-mod-php php-cli```  
-4. ```sudo apt-get install mysql-server mysql-client```  
-5. ```sudo apt-get install apache2```  
-6. ```sudo apt-get install phpmyadmin```, choose apache2, set password  
-7. ```sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/domain.com.conf```  
-8. add texts on domain.com.conf :
+3. ```sudo apt-get install node npm```
+4. ```sudo apt-get install php-common libapache2-mod-php php-cli```  
+5. ```sudo apt-get install mysql-server mysql-client```  
+6. ```sudo apt-get install apache2```  
+7. ```sudo apt-get install phpmyadmin```, choose apache2, set password  
+8. ```sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/domain.com.conf```  
+9. add texts on domain.com.conf :
 ```
 <Directory /var/www/html>  
     Options FollowSymLinks  

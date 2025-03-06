@@ -1,9 +1,9 @@
 <?php
-/*
-Template Name: My Blog
-*/
+/**
+ * Template Name: My Blog
+ */
 
-// 1) 로그인 사용자 전용
+// (선택) 로그인 사용자 전용
 if ( ! is_user_logged_in() ) {
     wp_redirect( wp_login_url( home_url('/') ) );
     exit;
@@ -12,17 +12,14 @@ if ( ! is_user_logged_in() ) {
 get_header();
 
 /**
- * 2) custom_two_skip_pagination 함수가 
- *    이미 functions.php나 다른 공용 파일에 정의되어 있다면
- *    아래 정의부를 제거하시고, 
- *    그 대신 해당 함수가 자동 로드되도록 해주세요.
+ * custom_two_skip_pagination()가 이미 functions.php 등에 정의되어 있으면
+ * 아래 정의는 제거하세요.
  */
 if ( ! function_exists('custom_two_skip_pagination') ) {
     function custom_two_skip_pagination($wp_query = null) {
         if (null === $wp_query) {
             global $wp_query;
         }
-
         $paged       = max(1, get_query_var('paged'));
         $total_pages = $wp_query->max_num_pages;
 
@@ -53,10 +50,10 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
             echo '<span class="' . $btn_disabled_class . '">&lsaquo;</span>';
         }
 
-        // 페이지 번호 표시
+        // 표시 범위(현재 페이지 주변)
         $range = 2;
         if ($total_pages <= 5) {
-            // 전체 페이지가 5 이하
+            // 5 이하
             for ($i = 1; $i <= $total_pages; $i++) {
                 if ($i == $paged) {
                     echo '<span class="' . $btn_active_class . '">' . $i . '</span>';
@@ -65,19 +62,16 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
                 }
             }
         } else {
-            // 5 페이지 초과
-            // 1) 항상 1페이지 표시
+            // 첫 페이지
             if ($paged == 1) {
                 echo '<span class="' . $btn_active_class . '">1</span>';
             } else {
                 echo '<a href="' . esc_url(get_pagenum_link(1)) . '" class="' . $btn_base_class . '">1</a>';
             }
 
-            // 2) 현재 페이지 주변 표시
             $start = max(2, $paged - $range);
             $end   = min($total_pages - 1, $paged + $range);
 
-            // '...' (왼쪽)
             if ($start > 2) {
                 echo '<span class="' . $btn_disabled_class . '">...</span>';
             }
@@ -90,7 +84,6 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
                 }
             }
 
-            // '...' (오른쪽)
             if ($end < $total_pages - 1) {
                 echo '<span class="' . $btn_disabled_class . '">...</span>';
             }
@@ -132,17 +125,21 @@ if ( ! function_exists('custom_two_skip_pagination') ) {
     }
 }
 
-// 3) “현재 로그인한 사용자”가 작성한 글만 쿼리
+// -------------------------
+// 3) “현재 로그인 사용자”가 작성한 글만 쿼리
+// -------------------------
 $paged = max(1, get_query_var('paged'));
+$current_user_id = get_current_user_id(); // 현재 로그인 사용자 ID
+
+// post_type: 필요에 따라 바꾸세요 (예: array('post','blog','community'))
 $args = array(
-    'post_type'      => 'post',
-    'author'         => get_current_user_id(),  // ★ 현재 로그인 사용자
+    'post_type'      => array('post','blog','community'),
+    'author'         => $current_user_id, // ★ author ID = 현재 로그인 사용자
     'posts_per_page' => 5,
     'orderby'        => 'date',
     'order'          => 'DESC',
     'paged'          => $paged,
 );
-
 $my_query = new WP_Query($args);
 ?>
 
@@ -152,9 +149,6 @@ $my_query = new WP_Query($args);
     <?php if ( $my_query->have_posts() ): ?>
         <ul class="space-y-3">
             <?php while ( $my_query->have_posts() ): $my_query->the_post(); ?>
-                <!-- ================================
-                     여기부터 loop.php 카드 구조
-                     ================================ -->
                 <li class="p-2 rounded-lg shadow-md grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 cardComponent">
                     
                     <!-- 왼쪽: 텍스트/메타 -->
@@ -163,7 +157,7 @@ $my_query = new WP_Query($args);
                         <a href="<?php the_permalink(); ?>" 
                            class="block font-semibold group hoveronlyText text-xl sm:text-2xl">
                             <?php the_title(); ?>
-                            <svg class="w-8 h-8 sm:w-10 sm:h-10 inline-block transition-all opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 duration-100 fill-current -mt-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                            <svg class="w-8 h-8 sm:w-10 sm:h-10 inline-block transition-all opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 duration-100 fill-current -mt-2" fill="currentColor" viewBox="0 -960 960 960">
                                 <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
                             </svg>
                         </a>
@@ -181,9 +175,11 @@ $my_query = new WP_Query($args);
 
                         <div class="flex flex-row">
                             <!-- 날짜 -->
-                            <div class="flex mt-1 sm:mt-2 flex items-center text-xs sm:text-sm grayTextThings">
+                            <div class="flex mt-1 sm:mt-2 items-center text-xs sm:text-sm grayTextThings">
                                 <div class="btn btn-ghost btn-xs sm:btn-sm btn-disabled btn-circle rounded-lg buttonComponent mr-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class=" fill-current w-5 h-5 sm:w-6 sm:h-6"><path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Z"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="fill-current w-5 h-5 sm:w-6 sm:h-6">
+                                        <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Z"/>
+                                    </svg>
                                 </div>
                                 <!-- 글 날짜 -->
                                 <span class="mr-2"><?php echo get_the_date('Y-m-d'); ?></span>
@@ -196,22 +192,26 @@ $my_query = new WP_Query($args);
                                 <?php endif; ?>
                             </div>
 
-                            <div class="flex mt-1 sm:mt-2 flex w-fit items-center text-xs sm:text-sm grayTextThings">
+                            <!-- 카테고리 -->
+                            <div class="flex mt-1 sm:mt-2 w-fit items-center text-xs sm:text-sm grayTextThings">
                                 <div class="btn btn-ghost btn-xs sm:btn-sm btn-disabled btn-circle rounded-lg buttonComponent mr-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="fill-current w-5 h-5 sm:w-6 sm:h-6"><path d="M300-80q-58 0-99-41t-41-99v-520q0-58 41-99t99-41h500v600q-25 0-42.5 17.5T740-220q0 25 17.5 42.5T800-160v80H300Zm-60-267q14-7 29-10t31-3h20v-440h-20q-25 0-42.5 17.5T240-740v393Zm160-13h320v-440H400v440Zm-160 13v-453 453Zm60 187h373q-6-14-9.5-28.5T660-220q0-16 3-31t10-29H300q-26 0-43 17.5T240-220q0 26 17 43t43 17Z"/></svg>
                                 </div>
-                                <!-- 카테고리 목록 -->
                                 <div class="btn btn-ghost text-xs sm:text-sm rounded-lg h-7 sm:h-8 w-fit px-1 hoveronlyButton">
                                     <?php the_category(''); ?>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- 태그 목록 -->
                         <div class="mt-1 sm:mt-2 flex w-fit items-center text-xs sm:text-sm grayTextThings">
                             <div class="btn btn-ghost btn-xs sm:btn-sm btn-disabled btn-circle rounded-lg buttonComponent mr-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="fill-current w-5 h-5 sm:w-6 sm:h-6"><path d="m240-160 40-160H120l20-80h160l40-160H180l20-80h160l40-160h80l-40 160h160l40-160h80l-40 160h160l-20 80H660l-40 160h160l-20 80H600l-40 160h-80l40-160H360l-40 160h-80Zm140-240h160l40-160H420l-40 160Z"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="fill-current w-5 h-5 sm:w-6 sm:h-6">
+                                    <path d="m240-160 40-160H120l20-80h160l40-160H180l20-80h160l40-160h80
+                                             l-40 160h160l40-160h80l-40 160h160l-20 80H660l-40 160h160l-20 80H600l-40 160h-80
+                                             l40-160H360l-40 160h-80Zm140-240h160l40-160H420l-40 160Z"/>
+                                </svg>
                             </div>
-                            <!-- 태그 목록 -->
                             <div>
                                 <?php
                                 $tags = get_the_tags();
@@ -261,7 +261,7 @@ $my_query = new WP_Query($args);
                                         'class' => 'rounded-lg w-full h-40 sm:h-full object-cover transition ease-in-out duration-300 group-hover:opacity-40'
                                     ]); ?>
                                     <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition ease-in-out duration-200">
-                                        <svg class="w-16 h-16 text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 -960 960 960">
                                             <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
                                         </svg>
                                     </div>
@@ -272,7 +272,7 @@ $my_query = new WP_Query($args);
                         <div class="hidden sm:block relative group overflow-hidden rounded order-1 sm:order-2">
                             <div class="sm:w-24 sm:h-full">
                                 <a href="<?php the_permalink(); ?>" class="btn btn-ghost rounded-lg tagButton w-full sm:h-full sm:flex items-center justify-center text-base-content">
-                                    <svg class="w-16 h-16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                                    <svg class="w-16 h-16" fill="currentColor" viewBox="0 -960 960 960">
                                         <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
                                     </svg>
                                 </a>
@@ -283,7 +283,7 @@ $my_query = new WP_Query($args);
             <?php endwhile; ?>
         </ul>
 
-        <!-- 4) 페이지네이션 호출 -->
+        <!-- 페이지네이션 -->
         <?php custom_two_skip_pagination($my_query); ?>
     <?php else: ?>
         <p>아직 작성한 글이 없습니다.</p>

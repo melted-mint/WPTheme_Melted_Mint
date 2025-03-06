@@ -282,9 +282,9 @@ jQuery(document).ready(() => {
     jQuery('.publish-option-btn[data-option="immediate"]').addClass('activatedButton text-white');
     jQuery('#schedule-options').hide();
 
-    // 댓글 설정 기본 "closed" (원하시는 값으로 조정)
-    jQuery('#comment_status').val('closed');
-    jQuery('.comment-status-btn[data-status="closed"]').addClass('activatedButton text-white');
+    // 댓글 설정 기본 "open" (원하시는 값으로 조정)
+    jQuery('#comment_status').val('open');
+    jQuery('.comment-status-btn[data-status="open"]').addClass('activatedButton text-white');
 
     // 비밀글 여부 기본 0(공개)
     jQuery('#private_post').val('0');
