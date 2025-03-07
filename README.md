@@ -30,7 +30,7 @@ Not Planned :
 [x] Dark-mode Text Editor...  
 [x] TOC  
   
-This All Features is just For Blog For Myself.  
+These All Features are just For Myself.  
 But I couldn't find any full features through any Themes Free,  
 So I decided to make one.  
 I didn't have any time for making like this from the beginning,  
