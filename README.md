@@ -14,11 +14,21 @@ Added :
 [o] Translator  
 [o] Bottom Navigation  
   
-  
-[x] Search  
-[x] Fully Customized Post Page  
-[x] TOC... Yet.  
+Planned(sorted By Difficulty) :  
+[p] Add User Name On Single Page(⭐)  
+[p] Add Post Edit Page(⭐)  
+[p] Custom Login Page(⭐⭐)  
+[p] Search(⭐⭐⭐)  
+[p] Finish How-to Menual(⭐⭐⭐)  
+[p] Edit All Archive Page(⭐⭐⭐⭐)  
+[p] Sign In(⭐⭐⭐⭐)  
+[p] Duplicated Comments Alert, Not Redirect(⭐⭐⭐⭐)  
+[p] Full Features With Text Editor(⭐⭐⭐⭐⭐)  
+[p] Swup, Server-Side Performance(⭐⭐⭐⭐⭐⭐)  
+
+Not Planned :  
 [x] Dark-mode Text Editor...  
+[x] TOC  
   
 This All Features is just For Blog For Myself.  
 But I couldn't find any full features through any Themes Free,  
@@ -74,10 +84,10 @@ in this manual, domain name is domain.com.
     Require all granted  
 </Directory>  
 ```
-9. ```sudo a2ensite /etc/apache2/sites-available/domain.com.conf```  
-10. ```sudo systemctl start apache2```  
-11. ```sudo chown www-data:www-data -R /var/www/*```  
-12. ```sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT```  
+10. ```sudo a2ensite /etc/apache2/sites-available/domain.com.conf```  
+11. ```sudo systemctl start apache2```  
+12. ```sudo chown www-data:www-data -R /var/www/*```  
+13. ```sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT```  
 (option) : ```sudo iptables -I INPUT -p udp --dport 80 -j ACCEPT```  
   
 ... And Test localhost.  
