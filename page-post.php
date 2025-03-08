@@ -123,9 +123,8 @@ get_header();
         <!-- 한마디글 (Novel/Spinoff 전용) - 기본 숨김 -->
         <div id="one-liner-container" class="mb-4" style="display:none;">
             <label class="block mb-1 font-semibold">한마디글</label>
-            <input type="text" name="one_liner_value" id="one_liner_value"
-                class="w-full p-2 border rounded-md" 
-                placeholder="작가의 한마디를 적어주세요!">
+            <!-- 여기서 input이 아닌 textarea -->
+            <textarea name="one_liner_value" id="one_liner_summernote" rows="3"></textarea>
         </div>
 
         <!-- 추가 기능: (A) 올리기 종류, (B) 예약 날짜/시간, (C) 비밀글 -->
@@ -622,6 +621,37 @@ jQuery(document).ready(() => {
         ],
         fontNamesIgnoreCheck: [
             '맑은 고딕', '궁서', '굴림체', '굴림', '돋움체', '바탕체'
+        ],
+        callbacks: {
+            onInit: function() {
+                jQuery('.note-editable').css({
+                    'background-color': '#dddddd',
+                    'color': 'black'
+                });
+            }
+        }
+    });
+});
+// 한마디글도 Summernote로 초기화
+jQuery(document).ready(() => {
+    // 본문 에디터
+    jQuery('#summernote').summernote({
+        height: 200,
+        lang: "ko-KR",
+        placeholder: '여기에 글을 쓰시면 돼요.',
+        // 기타 toolbar, fontNames 설정...
+    });
+
+    // 한마디글 에디터
+    jQuery('#one_liner_summernote').summernote({
+        height: 100, // 한마디글은 좀 더 낮게
+        lang: "ko-KR",
+        placeholder: '남길 말씀이 있으신가요?',
+        toolbar: [
+            // 한마디글은 간소화된 툴바 예시 (원하시면 본문과 동일하게 해도 됩니다)
+            ['style', ['bold', 'italic', 'underline', 'clear']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['view', ['fullscreen', 'help']]
         ],
         callbacks: {
             onInit: function() {

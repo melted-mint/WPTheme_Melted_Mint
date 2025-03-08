@@ -15,7 +15,6 @@ Added :
 [o] Bottom Navigation  
   
 Planned(sorted By Difficulty) :  
-[p] Add User Name On Single Page(⭐)  
 [p] Add Post Edit Page(⭐)  
 [p] Custom Login Page(⭐⭐)  
 [p] Search(⭐⭐⭐)  
@@ -84,10 +83,16 @@ in this manual, domain name is domain.com.
     Require all granted  
 </Directory>  
 ```
-10. ```sudo a2ensite /etc/apache2/sites-available/domain.com.conf```  
-11. ```sudo systemctl start apache2```  
-12. ```sudo chown www-data:www-data -R /var/www/*```  
-13. ```sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT```  
+10. add texts on /etc/apache2/apache2.conf :  
+```
+<IfModule mod_limits.c>
+    LimitRequestLine 32768
+</IfModule>
+```
+11. ```sudo a2ensite /etc/apache2/sites-available/domain.com.conf```  
+12. ```sudo systemctl start apache2```  
+13. ```sudo chown www-data:www-data -R /var/www/*```  
+14. ```sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT```  
 (option) : ```sudo iptables -I INPUT -p udp --dport 80 -j ACCEPT```  
   
 ... And Test localhost.  

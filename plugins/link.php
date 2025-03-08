@@ -1,115 +1,70 @@
 <?php
-// Blogs!
-// Blog: /blog/yyyy/mm/dd/hh/ii/ID/slug/
-add_filter('post_type_link', 'my_blog_permalink_slug_id', 10, 2);
-function my_blog_permalink_slug_id($permalink, $post) {
-    if ($post->post_type !== 'blog') return $permalink;
+/**
+ * link.php (통합 버전)
+ * 
+ * "년/월/일/시/분/ID/슬러그" 구조를
+ * blog, novel, spinoff, community 등 여러 CPT에 일괄 적용
+ */
 
-    $year    = get_the_time('Y', $post);
-    $month   = get_the_time('m', $post);
-    $day     = get_the_time('d', $post);
-    $hour    = get_the_time('H', $post);
-    $minute  = get_the_time('i', $post);
-    $pid     = $post->ID;            // 글 ID
+// 1) 적용 대상 CPT 배열
+$my_cpts = array( 'blog', 'novel', 'spinoff', 'community' );
 
-    // slug에서 -2, -3 등 숫자 접미사 제거
-    $slug = $post->post_name;
-    $slug = preg_replace('/-\d+$/', '', $slug);
+/**
+ * 2) CPT별 커스텀 퍼머링크 & 리라이트 등록
+ *    - 아래 함수가 각 CPT에 대한 post_type_link, rewrite_rule을 설정
+ */
+function register_custom_permalink_rewrites( $cpt_list ) {
+    // (A) post_type_link 필터: 링크 생성 로직
+    add_filter('post_type_link', function( $permalink, $post ) use ( $cpt_list ) {
 
-    // 최종 URL 예: /blog/2025/03/02/12/35/123/testasdf/
-    return home_url("/blog/$year/$month/$day/$hour/$minute/$pid/$slug/");
-}
-add_action('init', 'my_blog_rewrite_rule');
-function my_blog_rewrite_rule() {
-    // ^blog/(\d{4})/(\d{2})/(\d{2})/(\d{2})/(\d{2})/(\d+)/([^/]+)/?$
-    // $matches[6] => ID, $matches[7] => slug
-    add_rewrite_rule(
-        '^blog/(\d{4})/(\d{2})/(\d{2})/(\d{2})/(\d{2})/(\d+)/([^/]+)/?$',
-        'index.php?post_type=blog&p=$matches[6]',
-        'top'
-    );
-}
+        // 대상 CPT가 아닌 경우에는 그대로 반환
+        if ( ! in_array( $post->post_type, $cpt_list, true ) ) {
+            return $permalink;
+        }
 
-// Novels!
-// Novel: /novel/yyyy/mm/dd/hh/ii/ID/slug/
-add_filter('post_type_link', 'my_novel_permalink_slug_id', 10, 2);
-function my_novel_permalink_slug_id($permalink, $post) {
-    if ($post->post_type !== 'novel') return $permalink;
+        // 연·월·일·시·분
+        $year    = get_the_time('Y', $post);
+        $month   = get_the_time('m', $post);
+        $day     = get_the_time('d', $post);
+        $hour    = get_the_time('H', $post);
+        $minute  = get_the_time('i', $post);
 
-    $year   = get_the_time('Y', $post);
-    $month  = get_the_time('m', $post);
-    $day    = get_the_time('d', $post);
-    $hour   = get_the_time('H', $post);
-    $minute = get_the_time('i', $post);
-    $pid    = $post->ID;
+        $pid     = $post->ID;
+        // slug에서 -2, -3 등 숫자 접미사 제거
+        $slug    = preg_replace('/-\d+$/', '', $post->post_name);
 
-    // slug에서 -2, -3 등 숫자 접미사 제거
-    $slug = $post->post_name;
-    $slug = preg_replace('/-\d+$/', '', $slug);
+        // 최종 URL: /{post_type}/{yyyy}/{mm}/{dd}/{HH}/{ii}/{ID}/{slug}/
+        // 예: /blog/2025/03/02/12/35/123/mytitle/
+        return home_url( sprintf(
+            '/%s/%s/%s/%s/%s/%s/%d/%s/',
+            $post->post_type,
+            $year,
+            $month,
+            $day,
+            $hour,
+            $minute,
+            $pid,
+            $slug
+        ) );
+    }, 10, 2);
 
-    return home_url("/novel/$year/$month/$day/$hour/$minute/$pid/$slug/");
-}
-add_action('init', 'my_novel_rewrite_rule');
-function my_novel_rewrite_rule() {
-    add_rewrite_rule(
-        '^novel/(\d{4})/(\d{2})/(\d{2})/(\d{2})/(\d{2})/(\d+)/([^/]+)/?$',
-        'index.php?post_type=novel&p=$matches[6]',
-        'top'
-    );
-}
-
-// Spinoffs!
-// Spinoff: /spinoff/yyyy/mm/dd/hh/ii/ID/slug/
-add_filter('post_type_link', 'my_spinoff_permalink_slug_id', 10, 2);
-function my_spinoff_permalink_slug_id($permalink, $post) {
-    if ($post->post_type !== 'spinoff') return $permalink;
-
-    $year   = get_the_time('Y', $post);
-    $month  = get_the_time('m', $post);
-    $day    = get_the_time('d', $post);
-    $hour   = get_the_time('H', $post);
-    $minute = get_the_time('i', $post);
-    $pid    = $post->ID;
-
-    // slug에서 -2, -3 등 숫자 접미사 제거
-    $slug = $post->post_name;
-    $slug = preg_replace('/-\d+$/', '', $slug);
-
-    return home_url("/spinoff/$year/$month/$day/$hour/$minute/$pid/$slug/");
-}
-add_action('init', 'my_spinoff_rewrite_rule');
-function my_spinoff_rewrite_rule() {
-    add_rewrite_rule(
-        '^spinoff/(\d{4})/(\d{2})/(\d{2})/(\d{2})/(\d{2})/(\d+)/([^/]+)/?$',
-        'index.php?post_type=spinoff&p=$matches[6]',
-        'top'
-    );
+    // (B) rewrite_rule 등록: 실제 URL → WP 쿼리 매핑
+    add_action('init', function() use ( $cpt_list ) {
+        foreach ( $cpt_list as $cpt ) {
+            add_rewrite_rule(
+                '^' . $cpt . '/(\d{4})/(\d{2})/(\d{2})/(\d{2})/(\d{2})/(\d+)/([^/]+)/?$',
+                'index.php?post_type=' . $cpt . '&p=$matches[6]',
+                'top'
+            );
+        }
+    });
 }
 
-// Communities!
-// Community: /community/yyyy/mm/dd/hh/ii/ID/slug/
-add_filter('post_type_link', 'my_community_permalink_slug_id', 10, 2);
-function my_community_permalink_slug_id($permalink, $post) {
-    if ($post->post_type !== 'community') return $permalink;
+// 3) 실제로 적용
+register_custom_permalink_rewrites( $my_cpts );
 
-    $year   = get_the_time('Y', $post);
-    $month  = get_the_time('m', $post);
-    $day    = get_the_time('d', $post);
-    $hour   = get_the_time('H', $post);
-    $minute = get_the_time('i', $post);
-    $pid    = $post->ID;
-
-    // slug에서 -2, -3 등 숫자 접미사 제거
-    $slug = $post->post_name;
-    $slug = preg_replace('/-\d+$/', '', $slug);
-
-    return home_url("/community/$year/$month/$day/$hour/$minute/$pid/$slug/");
-}
-add_action('init', 'my_community_rewrite_rule');
-function my_community_rewrite_rule() {
-    add_rewrite_rule(
-        '^community/(\d{4})/(\d{2})/(\d{2})/(\d{2})/(\d{2})/(\d+)/([^/]+)/?$',
-        'index.php?post_type=community&p=$matches[6]',
-        'top'
-    );
-}
+/**
+ * 4) 주의: .htaccess(Rewrite rules) 새로고침
+ *    - 관리자 -> 설정 -> 고유주소 -> "변경사항 저장" 클릭
+ *      (혹은 플러그인/코드로 flush_rewrite_rules() 수행)
+ */

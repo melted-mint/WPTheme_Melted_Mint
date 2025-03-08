@@ -1,6 +1,6 @@
 <?php
 /**
- * single-blog.php
+ * single-community.php
  * 블로그 단일 페이지 템플릿
  */
 
@@ -39,7 +39,7 @@ get_header();
 
             $comment_status_text = ( 'open' === get_post()->comment_status ) ? '댓글 허용' : '댓글 불가';
 
-            // (B) 라이선스 메타 가져오기 (예: "CC BY-NC-ND" or "CC0" or "기타")
+            // (B) 라이선스 메타
             $license_value = get_post_meta(get_the_ID(), 'license', true);
             ?>
 
@@ -171,34 +171,64 @@ get_header();
                     <?php the_content(); ?>
                 </div>
 
+                <!-- 점선 구분선 -->
+                <hr class="h-[3px] border-0 my-[3px] sm:h-[3px] sm:my-[3px] bg-gray-800"
+                    style="
+                    background: repeating-linear-gradient(
+                        to right,
+                        #ccc 0,
+                        #ccc 10px,
+                        transparent 10px,
+                        transparent 14px
+                    );
+                    ">
+
+                <!-- (C) 하단 정보 (제목, 링크, 저자/게시일/라이선스) 한 줄 배치 -->
+                <div class="mt-4 p-3 metaCardBox rounded text-sm sm:text-base">
+                    
+                    <!-- 글 제목 -->
+                    <div class="text-xl sm:text-2xl font-semibold mb-1">
+                        <?php the_title(); ?>
+                    </div>
+                    
+                    <!-- 현재 링크 -->
+                    <a href="<?php the_permalink(); ?>"
+                       class="block text-blue-600 text-xs sm:text-sm break-all hover:underline mb-2">
+                        <?php 
+                        $decoded_url = urldecode( get_permalink() );
+                        echo esc_html($decoded_url);
+                        ?>
+                    </a>
+                    
+                    <!-- 저자, 게시일, 라이선스: 한 줄로 표시 -->
+                    <div class="flex flex-wrap items-center gap-6">
+                        <!-- 저자 -->
+                        <div>
+                            <strong>저자</strong><br>
+                            <?php echo get_the_author(); ?>
+                        </div>
+                        <!-- 게시일 -->
+                        <div>
+                            <strong>게시일</strong><br>
+                            <?php echo get_the_date('Y-m-d'); ?>
+                        </div>
+                        <!-- 라이선스 -->
+                        <div>
+                            <strong>라이선스</strong><br>
+                            <?php
+                            if ( empty($license_value) ) {
+                                echo '정보 없음';
+                            } else {
+                                echo esc_html($license_value);
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
             </article>
 
-            <!-- (2) 라이선스 카드 (본문 아래) -->
-            <?php if ( ! empty($license_value) ) : ?>
-                <div class="cardComponent p-4 mb-6">
-                    <h3 class="text-lg font-semibold mb-2">라이선스</h3>
-                    
-                    <?php 
-                    /**
-                     * 예: "CC0", "CC BY-NC-ND", "CC BY-SA", "기타..." 
-                     * 여기서 분기 처리로 아이콘+문구를 다르게 표시해도 됨
-                     */
-                    if ( stripos($license_value, 'CC0') !== false ) {
-                        // CC0 
-                        echo '<p>이 글은 <strong>CC0</strong>(퍼블릭 도메인)으로 배포됩니다.</p>';
-                    }
-                    else if ( stripos($license_value, 'CC') !== false ) {
-                        // CC~ (BY, NC, ND 등등)
-                        echo '<p>이 글은 <strong>' . esc_html($license_value) . '</strong> 라이선스로 배포됩니다.</p>';
-                        echo '<p class="text-sm text-gray-600 mt-1">자세한 사항은 <a href="https://creativecommons.org/licenses/?lang=ko" target="_blank" class="text-blue-500 underline">크리에이티브 커먼즈</a>를 참조하세요.</p>';
-                    }
-                    else {
-                        // 기타 라이선스
-                        echo '<p><strong>' . esc_html($license_value) . '</strong> </p>';
-                    }
-                    ?>
-                </div>
-            <?php endif; ?>
+            <!-- (2) 라이선스 카드 제거함 -->
 
             <!-- (3) 이전글/다음글 네비게이션 -->
             <?php
@@ -215,7 +245,8 @@ get_header();
                                           rounded-md py-6 px-6
                                           flex items-center justify-between
                                           text-2xl hoveronlyButton">
-                                    <svg class="w-14 h-14 -mx-3 -my-5 flex-shrink-0 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                                    <svg class="w-14 h-14 -mx-3 -my-5 flex-shrink-0 mr-3" 
+                                         viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                                     </svg>
                                     <span class="flex-1">
@@ -239,7 +270,8 @@ get_header();
                                     <span class="flex-1 text-right">
                                         <?php echo get_the_title($next_post->ID); ?>
                                     </span>
-                                    <svg class="w-14 h-14 -mx-3 -my-5 flex-shrink-0 ml-3" viewBox="0 0 24 24" fill="currentColor">
+                                    <svg class="w-14 h-14 -mx-3 -my-5 flex-shrink-0 ml-3" 
+                                         viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
                                     </svg>
                                 </a>
@@ -268,6 +300,6 @@ get_header();
 </div>
 
 <?php
-get_template_part('templates/blog/footer-navigation');
+get_template_part('templates/community/footer-navigation');
 get_template_part('footer-scroll');
 get_footer();

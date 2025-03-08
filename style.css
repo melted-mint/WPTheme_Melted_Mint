@@ -175,6 +175,17 @@ body {
     background-color: oklch(0.6 0.1 var(--hue));
 }
 
+/* 라이센스*/
+[data-theme="light"] .metaCardBox {
+    color: oklch(0.1 0.03 var(--hue));
+    background-color: oklch(0.85 0.03 var(--hue));
+}
+
+[data-theme="dark"] .metaCardBox {
+    color: oklch(0.95 0.03 var(--hue));
+    background-color: oklch(0.1 0.03 var(--hue));
+}
+
 /* custom styles */
 
 .menu-horizontal li a {

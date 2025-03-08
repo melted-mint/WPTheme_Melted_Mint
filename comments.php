@@ -68,6 +68,14 @@ if ( post_password_required() ) {
                             toolbar: [
                                 ["style", ["bold", "italic", "underline", "clear"]],
                             ],
+                            callbacks: {
+                                onInit: function() {
+                                    jQuery(".note-editable").css({
+                                        "background-color": "#dddddd",
+                                        "color": "black"
+                                    });
+                                }
+                            }
                         });
                     });
                     </script>
