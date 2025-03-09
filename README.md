@@ -15,13 +15,13 @@ Added :
 [o] Bottom Navigation  
   
 Planned(sorted By Difficulty) :  
-[p] Add Post Edit Page(⭐)  
 [p] Custom Login Page(⭐⭐)  
 [p] Search(⭐⭐⭐)  
 [p] Finish How-to Menual(⭐⭐⭐)  
 [p] Edit All Archive Page(⭐⭐⭐⭐)  
 [p] Sign In(⭐⭐⭐⭐)  
 [p] Duplicated Comments Alert, Not Redirect(⭐⭐⭐⭐)  
+[p] Add Post Edit Page(⭐⭐⭐⭐⭐)  
 [p] Filtering Private, Draft Posts on My Posts(⭐⭐⭐⭐⭐)  
 [p] Full Features With Text Editor(⭐⭐⭐⭐⭐)  
 [p] Swup, Server-Side Performance(⭐⭐⭐⭐⭐⭐)  

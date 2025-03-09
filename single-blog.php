@@ -228,8 +228,29 @@ get_header();
 
             </article>
 
-            <!-- (2) 라이선스 카드 제거함 -->
-
+            <!-- (2) 수정 버튼: "자신이 쓴 글이면" 표시 -->
+            <?php
+            $post_author_id = (int) get_the_author_meta('ID');
+            $current_user_id = get_current_user_id();
+            // 관리자/에디터 권한도 허용하려면:
+            $is_admin   = current_user_can('administrator');
+            $is_editor  = current_user_can('editor');
+            
+            // 또는 check current_user_can('edit_post', get_the_ID())
+            // 상황에 따라 권한 로직을 자유롭게 설정:
+            if ( ($current_user_id === $post_author_id) || $is_admin || $is_editor ) :
+                // 수정 페이지 링크 (page-edit 템플릿) + "?post_id=현재글ID"
+                $edit_url = add_query_arg( array(
+                    'post_id' => get_the_ID(),
+                ), home_url('/edit/') ); 
+                ?>
+                <div class="mb-6">
+                    <a href="<?php echo esc_url($edit_url); ?>"
+                       class="btn btn-ghost cardComponent">
+                        수정하기
+                    </a>
+                </div>
+            <?php endif; ?>
             <!-- (3) 이전글/다음글 네비게이션 -->
             <?php
             $prev_post = get_previous_post();
