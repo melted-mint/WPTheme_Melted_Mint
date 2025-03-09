@@ -22,6 +22,7 @@ Planned(sorted By Difficulty) :
 [p] Edit All Archive Page(⭐⭐⭐⭐)  
 [p] Sign In(⭐⭐⭐⭐)  
 [p] Duplicated Comments Alert, Not Redirect(⭐⭐⭐⭐)  
+[p] Filtering Private, Draft Posts on My Posts(⭐⭐⭐⭐⭐)  
 [p] Full Features With Text Editor(⭐⭐⭐⭐⭐)  
 [p] Swup, Server-Side Performance(⭐⭐⭐⭐⭐⭐)  
 

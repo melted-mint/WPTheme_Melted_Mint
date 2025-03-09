@@ -42,7 +42,7 @@ function has_community_posts_in_cat($cat_id) {
                 }
                 ?>
                 <li class="w-full hoveronlyButton rounded-lg h-10">
-                    <a href="<?php echo esc_url(get_category_link($category->term_id)); ?>" 
+                    <a href="<?php echo esc_url(get_category_link($category->term_id).'community'); ?>" 
                        class="w-full flex justify-between items-center ml-2">
                         <!-- 왼쪽: 카테고리명 -->
                         <span class="mt-1 text-sm"><?php echo esc_html($category->name); ?></span>
